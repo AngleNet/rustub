@@ -3,6 +3,7 @@ use crate::catalog::schema::Schema;
 use crate::concurrency::Transaction;
 use crate::storage::index::Index;
 use crate::storage::table::TableHeap;
+use crate::common::error::*;
 
 mod schema;
 mod column;
@@ -44,7 +45,7 @@ pub struct IndexInfo {
 pub struct Catalog {}
 
 impl Catalog {
-    pub fn create_table(txn: Transaction, name: String, schema: Schema) -> Result<TableInfo, Error> {
+    pub fn create_table(txn: Transaction, name: String, schema: Schema) -> Result<TableInfo> {
         todo!()
     }
 
@@ -52,5 +53,5 @@ impl Catalog {
         todo!()
     }
 
-    /// create index, get index
+    // todo: create index, get index
 }
