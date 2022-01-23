@@ -13,3 +13,5 @@ pub fn test_setup_logger() {
             .expect("the logger should start");
     });
 }
+
+// integration tests should goes here

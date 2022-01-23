@@ -60,11 +60,14 @@ impl FileBasedDiskManager {
             flush_log_func: None,
         })
     }
+
+    fn get_file_size(file_name: &String) -> usize {
+        todo!()
+    }
 }
 
+
 impl DiskManager for FileBasedDiskManager {
-
-
     fn shutdown(&mut self) {
         todo!()
     }
