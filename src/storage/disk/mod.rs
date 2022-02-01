@@ -54,6 +54,7 @@ impl FileBasedDiskManager {
         };
         log_file.push_str(".log");
         // todo: refactor this.
+        // todo: How to initialize a database file safely?
         // Try to open the log file and truncate it if it already exists.
         let mut file = fs::File::options().append(true).read(true).open(&log_file);
         if file.is_err() {
@@ -87,6 +88,7 @@ impl FileBasedDiskManager {
     }
 
     fn get_file_size(file_name: &String) -> usize {
+        // todo: this does not fail in bustub
         let meta = fs::metadata(file_name).unwrap();
         return meta.len() as usize;
     }
@@ -119,15 +121,45 @@ impl DiskManager for FileBasedDiskManager {
         self.db_io.flush();
     }
 
-    fn read_page(&mut self, pid: PageId, data: &mut [u8]) {
-        assert!(data.len() > 0 && data.len() <= PageSize as usize);
+    /// Read the contents of the specified page into the given buf.
+    ///
+    /// Reminders:
+    ///
+    /// THREAD SAFETY: NO
+    fn read_page(&mut self, pid: PageId, mut data: &mut [u8]) {
+        assert_eq!(data.len(), PageSize);
         let offset = pid as usize * PageSize;
-        self.db_io.seek(SeekFrom::Start(offset as u64)).unwrap();
-        if let Err(e) = self.db_io.read_exact(data) {
-            debug!("I/O error while reading page");
+        if offset > FileBasedDiskManager::get_file_size(&self.db_file) {
+            error!("IO error while reading past end of file");
+        } else {
+            self.db_io.seek(SeekFrom::Start(offset as u64));
+            // todo: why could we ignore the failure of seek?
+            while !data.is_empty() {
+                match self.db_io.read(data) {
+                    // the read has reached its 'end-of-file'
+                    Ok(0) => break,
+                    Ok(n) => {
+                        let tmp = data;
+                        data = &mut tmp[n..];
+                    }
+                    Err(ref e) if e.kind() == std::io::ErrorKind::Interrupted => {}
+                    Err(e) => {
+                        error!("IO error while reading page");
+                        return;
+                    }
+                }
+            }
+            if !data.is_empty() {
+                debug!("Read less than a page");
+                data.fill(0u8);
+            }
         }
     }
 
+    /// Write the contents of the log into disk file. Only return when sync is done, and only perform
+    /// sequential write.
+    ///
+    /// THREAD-SAFETY: NO
     fn write_log(&mut self, data: &[u8]) {
         if let Err(e) = self.log_io.write_all(data) {
             debug!("I/O error while writing log");
