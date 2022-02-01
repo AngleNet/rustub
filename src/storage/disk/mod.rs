@@ -3,6 +3,7 @@ use std::sync::Mutex;
 use crate::common::config::PageId;
 use crate::common::error::Result;
 use std::io::{Read, Seek, SeekFrom, Write};
+use std::sync::atomic::AtomicBool;
 use crate::RustubError;
 
 pub const PageSize: usize = 4096;
@@ -20,7 +21,7 @@ pub trait DiskManager {
 
     fn write_log(&mut self, data: &[u8]);
 
-    fn read_log(&mut self, data: &mut [u8], offset: u32);
+    fn read_log(&mut self, data: &mut [u8], offset: u32) -> bool;
 
     fn num_flushes(&self) -> u32;
 
@@ -56,7 +57,7 @@ impl FileBasedDiskManager {
         // todo: refactor this.
         // todo: How to initialize a database file safely?
         // Try to open the log file and truncate it if it already exists.
-        let mut file = fs::File::options().append(true).read(true).open(&log_file);
+        let mut file = fs::File::options().create(true).append(true).read(true).open(&log_file);
         if file.is_err() {
             // the just opened file will be dropped right here
             file = fs::File::options().truncate(true).write(true).open(&log_file);
@@ -67,7 +68,7 @@ impl FileBasedDiskManager {
             }
         }
         let log_io = file.unwrap();
-        file = fs::File::options().write(true).read(true).open(&db_file);
+        file = fs::File::options().create(true).write(true).read(true).open(&db_file);
         if file.is_err() {
             file = fs::File::options().truncate(true).write(true).open(&db_file);
             file = fs::File::options().write(true).read(true).open(&db_file);
@@ -161,12 +162,53 @@ impl DiskManager for FileBasedDiskManager {
     ///
     /// THREAD-SAFETY: NO
     fn write_log(&mut self, data: &[u8]) {
-        if let Err(e) = self.log_io.write_all(data) {
-            debug!("I/O error while writing log");
+        if data.is_empty() {
+            return;
         }
+        // todo: try to make this async
+        self.num_flushes += 1;
+        if self.log_io.write_all(data).is_err() {
+            error!("IO error while writing log");
+            return;
+        }
+        self.log_io.flush().unwrap();
     }
 
-    fn read_log(&mut self, data: &mut [u8], offset: u32) {}
+    /// Read the contents of the log into the given buf. Always read from the beginning and perform
+    /// sequential read.
+    ///
+    /// Returns false means already reach the end.
+    ///
+    /// THREAD SAFETY: NO
+    fn read_log(&mut self, mut data: &mut [u8], offset: u32) -> bool {
+        if offset >= FileBasedDiskManager::get_file_size(&self.log_file) as u32 {
+            debug!("end of log file");
+            return false;
+        }
+        self.log_io.seek(SeekFrom::Start(offset as u64));
+        while !data.is_empty() {
+            match self.log_io.read(data) {
+                // the read has reached its 'end-of-file'
+                Ok(0) => {
+                    break;
+                }
+                Ok(n) => {
+                    let tmp = data;
+                    data = &mut tmp[n..];
+                }
+                Err(ref e) if e.kind() == std::io::ErrorKind::Interrupted => {}
+                Err(e) => {
+                    error!("IO error while reading page");
+                    return false;
+                }
+            }
+        }
+        if !data.is_empty() {
+            debug!("Read less than a page");
+            data.fill(0u8);
+        }
+        return true;
+    }
 
     #[inline]
     fn num_flushes(&self) -> u32 {
@@ -199,40 +241,139 @@ pub struct InMemDiskManager {}
 
 #[cfg(test)]
 mod test {
+    use std::sync::Once;
+    use flexi_logger::{colored_default_format, colored_opt_format};
+
+    static TEST_LOGGER_INIT: Once = Once::new();
+
+    fn test_setup_logger() {
+        TEST_LOGGER_INIT.call_once(|| {
+            flexi_logger::Logger::try_with_env_or_str("debug").unwrap()
+                .log_to_stdout()
+                .format_for_stdout(colored_opt_format)
+                .use_utc()
+                .start()
+                .expect("the logger should start");
+        });
+    }
+
+    use std::fs;
     use std::fs::File;
     use std::io::{Read, Seek, SeekFrom, Write};
+    use std::panic;
+    use crate::common::memcpy;
+    use crate::storage::disk::{DiskManager, FileBasedDiskManager, PageSize};
 
-    #[test]
-    fn test() {
-        let mut f1 = File::options().create(true).read(true).write(true).open("/tmp/test").unwrap();
-        let one = "1".as_bytes();
-        let two = "2".as_bytes();
-        f1.seek(SeekFrom::Start(10)).unwrap();
-        let mut x = [8; 10];
-        f1.write(one);
-        f1.flush();
+    fn set_up() {
+        fs::remove_file("test.db");
+        fs::remove_file("test.log");
+        test_setup_logger();
+    }
 
-        f1.seek(SeekFrom::Start(0)).unwrap();
-        f1.read(&mut x[..]).unwrap();
-        println!("{:?}", x);
+    fn tear_down() {
+        fs::remove_file("test.db");
+        fs::remove_file("test.log");
+    }
+
+    // todo: how to setup and teardown tests in rust?
+    fn run_test<T>(test: T) -> ()
+        where T: FnOnce() -> () + panic::UnwindSafe
+    {
+        set_up();
+
+        let result = panic::catch_unwind(|| {
+            test()
+        });
+
+        tear_down();
+        assert!(result.is_ok())
     }
 
     #[test]
-    fn test_a() {
-        let mut a = A { a: 1 };
-        {
-            a = A { a: 2 };
-        }
-        a = A { a: 3 };
+    fn test_read_write_page() {
+        run_test(|| {
+            let mut buf = [0u8; PageSize];
+            let mut data = [0u8; PageSize];
+            let db_file = "test.db".to_string();
+            let mut dm = FileBasedDiskManager::new(db_file).unwrap();
+            let test_str = &b"A test string."[..];
+            // todo: refactor this
+            unsafe {
+                memcpy(data.as_mut_ptr(), test_str.as_ptr(), test_str.len());
+            }
+
+            // tolerate empty read
+            dm.read_page(0, &mut buf[..]);
+
+            assert_eq!(buf, [0u8; PageSize]);
+
+            dm.write_page(0, &data[..]);
+            dm.read_page(0, &mut buf[..]);
+            assert_eq!(buf, data);
+
+            buf.fill(0);
+            dm.write_page(5, &mut data[..]);
+            dm.read_page(0, &mut buf[..]);
+            assert_eq!(buf, data);
+        })
     }
 
-    struct A {
-        a: i32,
+    #[test]
+    fn test_read_write_log() {
+        let mut buf = [0u8; 16];
+        let mut data = [0u8; 16];
+        let db_file = "test.db".to_string();
+        let mut dm = FileBasedDiskManager::new(db_file).unwrap();
+
+        let test_str = &b"A test string."[..];
+        // todo: refactor this
+        unsafe {
+            memcpy(data.as_mut_ptr(), test_str.as_ptr(), test_str.len());
+        }
+
+        // dm.read_log(&mut buf[..], 0);
+
+        dm.write_log(&data[..]);
+        dm.read_log(&mut buf[..], 0);
+        assert_eq!(buf, data);
     }
 
-    impl Drop for A {
-        fn drop(&mut self) {
-            println!("drop {}", self.a);
-        }
+    #[test]
+    fn test_append_read_write() {
+        let mut log = File::options().append(true).create(true).read(true)
+            .open("test.log").unwrap();
+
+        log.write(&b"12345"[..]).unwrap();
+        log.flush();
+        let mut buf = [0u8; 1];
+
+        // Read will change the file cursor. If a write happens after the read, the read cursor will
+        // be reset to the last seek.
+        log.seek(SeekFrom::Start(1));
+        log.read(&mut buf[..]).unwrap();
+        assert_eq!(buf[0], '2' as u8);
+
+        log.read(&mut buf[..]).unwrap();
+        assert_eq!(buf[0], '3' as u8);
+
+        log.read(&mut buf[..]).unwrap();
+        assert_eq!(buf[0], '4' as u8);
+
+        log.write(&b"678"[..]).unwrap();
+        log.flush();
+
+        log.read(&mut buf[..]).unwrap();
+        assert_eq!(buf[0], '4' as u8);
+
+        log.read(&mut buf[..]).unwrap();
+        assert_eq!(buf[0], '4' as u8);
+
+        log.read(&mut buf[..]).unwrap();
+        assert_eq!(buf[0], '4' as u8);
+
+        log.write(&b"90"[..]).unwrap();
+        log.flush();
+        log.read(&mut buf[..]).unwrap();
+        assert_eq!(buf[0], '4' as u8);
     }
 }
