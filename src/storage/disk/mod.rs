@@ -1,12 +1,10 @@
 use std::fs;
 use std::sync::Mutex;
-use crate::common::config::PageId;
+use crate::common::config::{PAGE_SIZE, PageId};
 use crate::common::error::Result;
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::sync::atomic::AtomicBool;
 use crate::RustubError;
-
-pub const PageSize: usize = 4096;
 
 pub type FlushLogFuture = fn();
 
@@ -113,8 +111,8 @@ impl DiskManager for FileBasedDiskManager {
     ///
     /// THREAD SAFETY: NO
     fn write_page(&mut self, pid: PageId, data: &[u8]) {
-        assert_eq!(data.len(), PageSize);
-        let offset = pid as usize * PageSize;
+        assert_eq!(data.len(), PAGE_SIZE);
+        let offset = pid as usize * PAGE_SIZE;
         self.db_io.seek(SeekFrom::Start(offset as u64)).unwrap();
         if let Err(e) = self.db_io.write_all(data) {
             error!("IO error while writing page: {}", e);
@@ -128,8 +126,8 @@ impl DiskManager for FileBasedDiskManager {
     ///
     /// THREAD SAFETY: NO
     fn read_page(&mut self, pid: PageId, mut data: &mut [u8]) {
-        assert_eq!(data.len(), PageSize);
-        let offset = pid as usize * PageSize;
+        assert_eq!(data.len(), PAGE_SIZE);
+        let offset = pid as usize * PAGE_SIZE;
         if offset > FileBasedDiskManager::get_file_size(&self.db_file) {
             error!("IO error while reading past end of file");
         } else {
@@ -261,8 +259,9 @@ mod test {
     use std::fs::File;
     use std::io::{Read, Seek, SeekFrom, Write};
     use std::panic;
+    use crate::common::config::PAGE_SIZE;
     use crate::common::memcpy;
-    use crate::storage::disk::{DiskManager, FileBasedDiskManager, PageSize};
+    use crate::storage::disk::{DiskManager, FileBasedDiskManager};
 
     fn set_up() {
         fs::remove_file("test.db");
@@ -292,8 +291,8 @@ mod test {
     #[test]
     fn test_read_write_page() {
         run_test(|| {
-            let mut buf = [0u8; PageSize];
-            let mut data = [0u8; PageSize];
+            let mut buf = [0u8; PAGE_SIZE];
+            let mut data = [0u8; PAGE_SIZE];
             let db_file = "test.db".to_string();
             let mut dm = FileBasedDiskManager::new(db_file).unwrap();
             let test_str = &b"A test string."[..];
@@ -305,7 +304,7 @@ mod test {
             // tolerate empty read
             dm.read_page(0, &mut buf[..]);
 
-            assert_eq!(buf, [0u8; PageSize]);
+            assert_eq!(buf, [0u8; PAGE_SIZE]);
 
             dm.write_page(0, &data[..]);
             dm.read_page(0, &mut buf[..]);
