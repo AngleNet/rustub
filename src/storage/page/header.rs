@@ -1,4 +1,3 @@
-use std::detect::__is_feature_detected::rtm;
 use std::io::{Read, Write};
 use std::mem::transmute;
 use std::process::id;
@@ -14,7 +13,7 @@ const HEADER_PAGE_ENTRY_SIZE: usize = HEADER_PAGE_ENTRY_KEY_SIZE + HEADER_PAGE_E
 
 /// Database use this first page (page_id = 0) as header page to store metadata, in our case, we will
 /// contain information about table/index name (length less than 32 bytes) and their corresponding
-/// root_id
+/// root page id.
 ///
 /// Format (size in byte):
 /// ---------------------------------------------------------
@@ -57,6 +56,7 @@ impl HeaderPage {
         }
         let offset = HEADER_PAGE_COUNT_SIZE + idx as usize * HEADER_PAGE_ENTRY_SIZE;
         let count = self.record_count();
+        // todo: fix this unsafe block
         unsafe {
             let start = self.data_mut().as_mut_ptr() as usize;
             let dest = start + offset * idx as usize;
