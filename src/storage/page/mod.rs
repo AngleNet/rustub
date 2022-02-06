@@ -1,4 +1,4 @@
-use crate::common::config::{PAGE_SIZE, PageId};
+use crate::common::config::{INVALID_PAGE_ID, PAGE_SIZE, PageId};
 
 mod header;
 mod table;
@@ -41,6 +41,17 @@ struct BasePage {
     pin_count: usize,
     /// True if the page is dirty, i.e. it is different from its corresponding page on disk
     is_dirty: bool,
+}
+
+impl BasePage {
+    pub fn new() -> Self {
+        BasePage {
+            data: [0; PAGE_SIZE],
+            page_id: INVALID_PAGE_ID,
+            pin_count: 0,
+            is_dirty: false,
+        }
+    }
 }
 
 impl Page for BasePage {

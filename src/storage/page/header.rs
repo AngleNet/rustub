@@ -1,9 +1,10 @@
+use std::detect::__is_feature_detected::rtm;
 use std::io::{Read, Write};
 use std::mem::transmute;
 use std::process::id;
 use bytes::{Buf, BufMut};
 use crate::common::config::{INVALID_PAGE_ID, PageId};
-use crate::common::memcpy;
+use crate::common::{memcpy, memmove};
 use crate::storage::page::{BasePage, Page};
 
 const HEADER_PAGE_COUNT_SIZE: usize = 4;
@@ -25,7 +26,11 @@ pub struct HeaderPage {
 
 impl HeaderPage {
     pub fn new() -> Self {
-        todo!()
+        let mut page = HeaderPage {
+            base: BasePage::new()
+        };
+        page.set_record_count(0);
+        return page;
     }
 
     pub fn insert_record(&mut self, name: &str, root_id: PageId) -> bool {
@@ -36,16 +41,31 @@ impl HeaderPage {
             // already exists
             return false;
         }
-        let num = self.record_count() as usize;
-        let offset = HEADER_PAGE_COUNT_SIZE + num * HEADER_PAGE_ENTRY_SIZE;
-        let mut buf = &mut self.data_mut()[offset..];
-        buf.put_slice(name.as_bytes());
-        buf.put_i32(root_id);
+        let num = self.record_count();
+        let offset = HEADER_PAGE_COUNT_SIZE + num as usize * HEADER_PAGE_ENTRY_SIZE;
+        (&mut self.data_mut()[offset..]).put_slice(name.as_bytes());
+        (&mut self.data_mut()[offset + HEADER_PAGE_ENTRY_KEY_SIZE..]).put_i32(root_id);
+        self.set_record_count(num + 1);
         return true;
     }
 
     pub fn delete_record(&mut self, name: &str) -> bool {
-        unimplemented!()
+        assert!(name.len() < HEADER_PAGE_ENTRY_KEY_SIZE);
+        let idx = self.find(name);
+        if idx == -1 {
+            return false;
+        }
+        let offset = HEADER_PAGE_COUNT_SIZE + idx as usize * HEADER_PAGE_ENTRY_SIZE;
+        let count = self.record_count();
+        unsafe {
+            let start = self.data_mut().as_mut_ptr() as usize;
+            let dest = start + offset * idx as usize;
+            let src = dest + offset;
+            let n = (count - idx as u32 - 1) as usize * HEADER_PAGE_ENTRY_SIZE;
+            memmove(dest as *mut u8, src as *const u8, n);
+        }
+        self.set_record_count(self.record_count() - 1);
+        true
     }
 
     pub fn update_record(&mut self, name: &str, root_id: PageId) -> bool {
@@ -66,7 +86,7 @@ impl HeaderPage {
         if idx == -1 {
             return INVALID_PAGE_ID;
         }
-        (&(self.data())[((idx + 1) * 36) as usize..]).get_i32()
+        (&self.data()[(idx + 1) as usize * HEADER_PAGE_ENTRY_SIZE..]).get_i32()
     }
 
     pub fn record_count(&self) -> u32 {
@@ -74,10 +94,12 @@ impl HeaderPage {
     }
 
     fn find(&self, name: &str) -> i32 {
-        let count = self.record_count() as i32;
+        let count = self.record_count();
         for i in 0..count {
-            if name.as_bytes().eq(&self.data()[(4 + i << 5) as usize..(36 + i << 5) as usize]) {
-                return i;
+            let offset = HEADER_PAGE_COUNT_SIZE + i as usize * HEADER_PAGE_ENTRY_SIZE;
+            if name.as_bytes().eq(
+                &self.data()[offset..offset + name.len()]) {
+                return i as i32;
             }
         }
         return -1;
@@ -113,13 +135,21 @@ impl Page for HeaderPage {
 
 #[cfg(test)]
 mod tests {
-    use bytes::Buf;
+    use crate::common::config::INVALID_PAGE_ID;
+    use crate::storage::page::HeaderPage;
 
     #[test]
-    fn test() {
-        let x: [u8; 4] = [1, 2, 3, 4];
-        let mut y = &x[..];
-        let z = y.get_u8();
-        println!("{}", y.len());
+    fn test_header_page_crud() {
+        let mut page = HeaderPage::new();
+        let key = "rustub";
+        assert_eq!(page.record_count(), 0);
+        assert!(page.insert_record(key, 1));
+        assert_eq!(page.record_count(), 1);
+        assert!(!page.insert_record(key, 1));
+        assert!(page.update_record(key, 2));
+        assert_eq!(page.root_id(key), 2);
+        assert!(page.delete_record(key));
+        assert_eq!(page.record_count(), 0);
+        assert_eq!(page.root_id(key), INVALID_PAGE_ID);
     }
 }
