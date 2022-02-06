@@ -1,20 +1,56 @@
-use crate::types::ColTypeId;
+use crate::types::TypeId;
 
-/// A value represents a view over SQL data stored in some materialized state. All values have a type
-/// and comparison functions, but subclasses implement other type-specific functionality
+enum Val {
+    Boolean(i8),
+    TinyInt(i8),
+    SmallInt(i16),
+    Int(i32),
+    BigInt(i64),
+    Decimal(f64),
+    Timestamp(u64),
+    Varlen(Vec<u8>),
+}
 
-pub struct ColValue {}
+pub struct Value {
+    value: Val,
+    type_id: TypeId,
+}
 
-impl ColValue {
-    pub fn new(typ: ColTypeId) -> ColValue {
-        todo!()
+
+impl Value {
+    #[inline]
+    pub fn type_id(&self) -> TypeId {
+        self.type_id
     }
 
-    pub fn with_tiny_int_or_boolean(typ: ColTypeId, i: u8) -> ColValue {
-        todo!()
+    pub fn check_integer(&self) -> bool {
+        match self.type_id() {
+            TypeId::TinyInt | TypeId::SmallInt | TypeId::Integer | TypeId::BigInt => true,
+            _ => false
+        }
     }
 
-    pub fn with_decimal(typ: ColTypeId, d: f64) -> ColValue {
-        todo!()
+    pub fn check_comparable(&self, o: &Value) -> bool {
+        match self.type_id() {
+            TypeId::Boolean => {
+                o.type_id() == TypeId::Boolean || o.type_id() == TypeId::VarChar
+            }
+            TypeId::TinyInt | TypeId::SmallInt | TypeId::Integer | TypeId::BigInt |
+            TypeId::Decimal => {
+                match o.type_id() {
+                    TypeId::TinyInt | TypeId::SmallInt | TypeId::Integer | TypeId::BigInt
+                    | TypeId::Decimal | TypeId::VarChar => {
+                        true
+                    }
+                    _ => false
+                }
+            }
+            TypeId::VarChar => {
+                // Anything can be cast to a string!
+                true
+            }
+            // todo: what happens with timestamp?
+            _ => false
+        }
     }
 }

@@ -289,7 +289,7 @@ mod test {
     }
 
     #[test]
-    fn test_read_write_page() {
+    fn read_write_page() {
         run_test(|| {
             let mut buf = [0u8; PAGE_SIZE];
             let mut data = [0u8; PAGE_SIZE];
@@ -318,7 +318,7 @@ mod test {
     }
 
     #[test]
-    fn test_read_write_log() {
+    fn read_write_log() {
         let mut buf = [0u8; 16];
         let mut data = [0u8; 16];
         let db_file = "test.db".to_string();
@@ -338,7 +338,7 @@ mod test {
     }
 
     #[test]
-    fn test_append_read_write() {
+    fn append_read_write() {
         let mut log = File::options().append(true).create(true).read(true)
             .open("test.log").unwrap();
 

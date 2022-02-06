@@ -1,3 +1,4 @@
+use bytes::{Buf, BufMut};
 use crate::common::config::PageId;
 use crate::storage::page::{BasePage, Page};
 
@@ -27,4 +28,53 @@ const OFFSET_TUPLE_SIZE: usize = 28;
 /// -----------------------------------------------------------------
 pub struct TablePage {
     base: BasePage,
+}
+
+impl TablePage {
+    /// Returns the page id of this table page
+    pub fn page_id(&self) -> PageId {
+        self.data().get_i32()
+    }
+
+    /// Returns the page id of the previous table page
+    pub fn prev_page_id(&self) -> PageId {
+        (&self.data()[OFFSET_PREV_PAGE_ID..]).get_i32()
+    }
+
+    /// Returns the page id of the next table page
+    pub fn next_page_id(&self) -> PageId {
+        (&self.data()[OFFSET_NEXT_PAGE_ID..]).get_i32()
+    }
+
+    /// Set the page id of the next table page
+    pub fn set_next_page_id(&mut self, pid: PageId) {
+        (&mut self.data_mut()[OFFSET_NEXT_PAGE_ID..]).put_i32(pid)
+    }
+
+    /// Set the page id of the previous table page
+    pub fn set_prev_page_id(&mut self, pid: PageId) {
+        (&mut self.data_mut()[OFFSET_PREV_PAGE_ID..]).put_i32(pid)
+    }
+}
+
+impl Page for TablePage {
+    fn data(&self) -> &[u8] {
+        self.base.data()
+    }
+
+    fn data_mut(&mut self) -> &mut [u8] {
+        self.base.data_mut()
+    }
+
+    fn page_id(&self) -> PageId {
+        self.base.page_id()
+    }
+
+    fn is_dirty(&self) -> bool {
+        self.base.is_dirty()
+    }
+
+    fn pin_count(&self) -> usize {
+        self.base.pin_count()
+    }
 }

@@ -1,5 +1,6 @@
 pub mod config;
 pub mod error;
+mod rid;
 
 pub unsafe extern fn memcpy(dest: *mut u8, src: *const u8,
                             n: usize) -> *mut u8 {

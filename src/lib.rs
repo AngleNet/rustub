@@ -13,6 +13,8 @@ use common::error::*;
 #[macro_use]
 extern crate log;
 extern crate flexi_logger;
+#[macro_use]
+extern crate lazy_static;
 
 
 #[cfg(test)]

@@ -139,7 +139,7 @@ mod tests {
     use crate::storage::page::HeaderPage;
 
     #[test]
-    fn test_header_page_crud() {
+    fn header_page_crud() {
         let mut page = HeaderPage::new();
         let key = "rustub";
         assert_eq!(page.record_count(), 0);
