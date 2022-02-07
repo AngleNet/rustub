@@ -1,8 +1,8 @@
-use std::fmt::format;
-use bytes::{Buf, BufMut};
 use crate::types::value::Value;
-use crate::types::{CmpBool, Type, TypeId};
 use crate::types::TypeId::VarChar;
+use crate::types::{CmpBool, Type, TypeId};
+use bytes::{Buf, BufMut};
+use std::fmt::format;
 
 pub struct BooleanType {
     type_id: TypeId,
@@ -18,6 +18,7 @@ impl BooleanType {
 
 impl Type for BooleanType {
     fn compare_equal(&self, left: &Value, right: &Value) -> CmpBool {
+        assert!(left.type_id() == TypeId::Boolean);
         assert!(left.check_comparable(right));
         if left.is_null() || right.is_null() {
             return CmpBool::Null;
@@ -26,6 +27,7 @@ impl Type for BooleanType {
     }
 
     fn compare_not_equal(&self, left: &Value, right: &Value) -> CmpBool {
+        assert!(left.type_id() == TypeId::Boolean);
         assert!(left.check_comparable(right));
         if left.is_null() || right.is_null() {
             return CmpBool::Null;
@@ -34,6 +36,7 @@ impl Type for BooleanType {
     }
 
     fn compare_less_than(&self, left: &Value, right: &Value) -> CmpBool {
+        assert!(left.type_id() == TypeId::Boolean);
         assert!(left.check_comparable(right));
         if left.is_null() || right.is_null() {
             return CmpBool::Null;
@@ -42,6 +45,7 @@ impl Type for BooleanType {
     }
 
     fn compare_less_than_equal(&self, left: &Value, right: &Value) -> CmpBool {
+        assert!(left.type_id() == TypeId::Boolean);
         assert!(left.check_comparable(right));
         if left.is_null() || right.is_null() {
             return CmpBool::Null;
@@ -50,6 +54,7 @@ impl Type for BooleanType {
     }
 
     fn compare_greater_than(&self, left: &Value, right: &Value) -> CmpBool {
+        assert!(left.type_id() == TypeId::Boolean);
         assert!(left.check_comparable(right));
         if left.is_null() || right.is_null() {
             return CmpBool::Null;
@@ -58,6 +63,7 @@ impl Type for BooleanType {
     }
 
     fn compare_greater_than_equal(&self, left: &Value, right: &Value) -> CmpBool {
+        assert!(left.type_id() == TypeId::Boolean);
         assert!(left.check_comparable(right));
         if left.is_null() || right.is_null() {
             return CmpBool::Null;
@@ -71,6 +77,7 @@ impl Type for BooleanType {
     }
 
     fn to_string(&self, val: &Value) -> String {
+        assert!(val.type_id() == TypeId::Boolean);
         let v = val.as_boolean();
         if v == 1 {
             return "true".into();
@@ -82,6 +89,7 @@ impl Type for BooleanType {
     }
 
     fn serialize(&self, val: &Value, mut buf: &mut [u8]) {
+        assert!(val.type_id() == TypeId::Boolean);
         buf.put_i8(val.as_boolean());
     }
 
@@ -91,6 +99,7 @@ impl Type for BooleanType {
     }
 
     fn cast_as(&self, val: &Value, typ: TypeId) -> Value {
+        assert!(val.type_id() == TypeId::Boolean);
         match typ {
             TypeId::Boolean => val.copy(),
             TypeId::VarChar => {
@@ -107,6 +116,7 @@ impl Type for BooleanType {
 
     #[inline]
     fn copy(&self, v: &Value) -> Value {
+        assert!(v.type_id() == TypeId::Boolean);
         Value::with_boolean(v.as_boolean())
     }
 }

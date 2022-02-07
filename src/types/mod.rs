@@ -1,8 +1,10 @@
 mod boolean;
+mod integer;
 /// Rustub supports ordinary types, such as boolean, tiny int, small int, int, big int, varchar,
 /// timestamp, decimal. Every value has a specific type and a bunch of compatible types which can be
 /// casted to.
 mod value;
+mod varchar;
 
 pub use crate::types::boolean::BooleanType;
 use crate::types::value::Value;
@@ -23,15 +25,15 @@ pub enum TypeId {
 impl ToString for TypeId {
     fn to_string(&self) -> String {
         match self {
-            TypeId::Invalid => { "INVALID".to_string() }
-            TypeId::Boolean => { "BOOLEAN".to_string() }
-            TypeId::TinyInt => { "TINYINT".to_string() }
-            TypeId::SmallInt => { "SMALLINT".to_string() }
-            TypeId::Integer => { "INTEGER".to_string() }
-            TypeId::BigInt => { "BIGINT".to_string() }
-            TypeId::Decimal => { "DECIMAL".to_string() }
-            TypeId::VarChar => { "VARCHAR".to_string() }
-            TypeId::Timestamp => { "TIMESTAMP".to_string() }
+            TypeId::Invalid => "INVALID".to_string(),
+            TypeId::Boolean => "BOOLEAN".to_string(),
+            TypeId::TinyInt => "TINYINT".to_string(),
+            TypeId::SmallInt => "SMALLINT".to_string(),
+            TypeId::Integer => "INTEGER".to_string(),
+            TypeId::BigInt => "BIGINT".to_string(),
+            TypeId::Decimal => "DECIMAL".to_string(),
+            TypeId::VarChar => "VARCHAR".to_string(),
+            TypeId::Timestamp => "TIMESTAMP".to_string(),
         }
     }
 }

@@ -1,6 +1,31 @@
 use crate::types::{type_instance, CmpBool, TypeId};
 use std::env::var;
 
+/// Comparable matrix
+/// ---------------------------------------------------------------------------
+/// |      right|tiny | small | integer | big | decimal | timestamp | varchar |
+/// | left      | int |  int  |         | int |         |           |         |
+/// ---------------------------------------------------------------------------
+/// | tiny int  |  Y  |   Y   |    Y    |  Y  |    Y    |     Y     |
+/// | -----------------------------------------------------------------
+/// | small int |
+/// |------------------------------------------------------------------
+/// | integer   |
+/// |-----------------------------------------------------------------
+/// | big int   |
+/// |------------------------------------------------------------
+/// | decimal   |
+/// |-------------------------------------------------
+/// | timestamp |
+/// |-------------------
+/// | varchar   |
+/// |---------------------------------------------------------------
+/// Casting matrix
+///
+///
+
+// todo: what if a value is null?
+
 #[derive(Debug)]
 enum Val {
     Boolean(i8),
@@ -60,11 +85,32 @@ impl Value {
         }
     }
 
+    pub fn as_tinyint(&self) -> i8 {
+        match &self.value {
+            Val::TinyInt(v) => *v,
+            _ => panic!(""),
+        }
+    }
+
+    pub fn as_integer(&self) -> i32 {
+        match &self.value {
+            Val::Int(v) => *v,
+            _ => panic!(""),
+        }
+    }
+
+    pub fn as_bigint(&self) -> i64 {
+        match &self.value {
+            Val::BigInt(v) => *v,
+            _ => panic!(""),
+        }
+    }
+
     #[inline]
     pub fn as_varchar(&self) -> &[u8] {
         match &self.value {
             Val::Varlen(ref v) => &v[..],
-            _ => panic!("")
+            _ => panic!(""),
         }
     }
 
