@@ -1,10 +1,10 @@
+use crate::common::config::{PageId, INVALID_PAGE_ID};
+use crate::common::{memcpy, memmove};
+use crate::storage::page::{BasePage, Page};
+use bytes::{Buf, BufMut};
 use std::io::{Read, Write};
 use std::mem::transmute;
 use std::process::id;
-use bytes::{Buf, BufMut};
-use crate::common::config::{INVALID_PAGE_ID, PageId};
-use crate::common::{memcpy, memmove};
-use crate::storage::page::{BasePage, Page};
 
 const HEADER_PAGE_COUNT_SIZE: usize = 4;
 const HEADER_PAGE_ENTRY_KEY_SIZE: usize = 32;
@@ -26,7 +26,7 @@ pub struct HeaderPage {
 impl HeaderPage {
     pub fn new() -> Self {
         let mut page = HeaderPage {
-            base: BasePage::new()
+            base: BasePage::new(),
         };
         page.set_record_count(0);
         return page;
@@ -74,7 +74,9 @@ impl HeaderPage {
         if idx == -1 {
             return false;
         }
-        let offset = idx as usize * HEADER_PAGE_ENTRY_SIZE + HEADER_PAGE_COUNT_SIZE + HEADER_PAGE_ENTRY_KEY_SIZE;
+        let offset = idx as usize * HEADER_PAGE_ENTRY_SIZE
+            + HEADER_PAGE_COUNT_SIZE
+            + HEADER_PAGE_ENTRY_KEY_SIZE;
         (&mut (self.data_mut()[offset as usize..])).put_i32(root_id);
         return true;
     }
@@ -97,8 +99,10 @@ impl HeaderPage {
         let count = self.record_count();
         for i in 0..count {
             let offset = HEADER_PAGE_COUNT_SIZE + i as usize * HEADER_PAGE_ENTRY_SIZE;
-            if name.as_bytes().eq(
-                &self.data()[offset..offset + name.len()]) {
+            if name
+                .as_bytes()
+                .eq(&self.data()[offset..offset + name.len()])
+            {
                 return i as i32;
             }
         }
@@ -131,7 +135,6 @@ impl Page for HeaderPage {
         self.base.pin_count()
     }
 }
-
 
 #[cfg(test)]
 mod tests {

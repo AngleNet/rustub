@@ -1,8 +1,8 @@
+mod boolean;
 /// Rustub supports ordinary types, such as boolean, tiny int, small int, int, big int, varchar,
 /// timestamp, decimal. Every value has a specific type and a bunch of compatible types which can be
 /// casted to.
 mod value;
-mod boolean;
 
 pub use crate::types::boolean::BooleanType;
 use crate::types::value::Value;
@@ -20,6 +20,40 @@ pub enum TypeId {
     Timestamp,
 }
 
+impl From<u8> for TypeId {
+    #[inline]
+    fn from(v: u8) -> Self {
+        match v {
+            1 => TypeId::Boolean,
+            2 => TypeId::TinyInt,
+            3 => TypeId::SmallInt,
+            4 => TypeId::Integer,
+            5 => TypeId::BigInt,
+            6 => TypeId::Decimal,
+            7 => TypeId::VarChar,
+            8 => TypeId::Timestamp,
+            _ => TypeId::Invalid,
+        }
+    }
+}
+
+impl From<TypeId> for u8 {
+    #[inline]
+    fn from(t: TypeId) -> Self {
+        match t {
+            TypeId::Boolean => 1,
+            TypeId::TinyInt => 2,
+            TypeId::SmallInt => 3,
+            TypeId::Integer => 4,
+            TypeId::BigInt => 5,
+            TypeId::Decimal => 6,
+            TypeId::VarChar => 7,
+            TypeId::Timestamp => 8,
+            _ => 0,
+        }
+    }
+}
+
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub enum CmpBool {
     False,
@@ -27,7 +61,19 @@ pub enum CmpBool {
     Null,
 }
 
+impl From<bool> for CmpBool {
+    #[inline]
+    fn from(v: bool) -> Self {
+        if v {
+            CmpBool::True
+        } else {
+            CmpBool::False
+        }
+    }
+}
+
 lazy_static! {
+    // Cache for type instances
     static ref TYPE_INSTANCES: [Box<dyn Type + Sync>; 1] = [Box::new(BooleanType::new())];
 }
 
@@ -130,11 +176,20 @@ pub trait Type {
         unimplemented!()
     }
 
-    fn deserialize_from(&self, buf: &[u8]) -> Value {
+    fn deserialize(&self, buf: &[u8]) -> Value {
         unimplemented!()
     }
 
     fn cast_as(&self, val: &Value, typ: TypeId) -> Value {
         unimplemented!()
     }
+
+    fn copy(&self, v: &Value) -> Value {
+        unimplemented!()
+    }
+}
+
+pub fn type_instance<'a>(typ: TypeId) -> &'a Box<dyn Type + Sync> {
+    let idx: u8 = typ.into();
+    &TYPE_INSTANCES[idx as usize]
 }

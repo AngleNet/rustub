@@ -1,4 +1,4 @@
-use crate::common::config::{INVALID_PAGE_ID, PAGE_SIZE, PageId};
+use crate::common::config::{PageId, INVALID_PAGE_ID, PAGE_SIZE};
 
 mod header;
 mod table;

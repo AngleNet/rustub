@@ -1,12 +1,12 @@
-use std::error::Error;
 use crate::catalog::schema::Schema;
+use crate::common::error::*;
 use crate::concurrency::Transaction;
 use crate::storage::index::Index;
 use crate::storage::table::TableHeap;
-use crate::common::error::*;
+use std::error::Error;
 
-mod schema;
 mod column;
+mod schema;
 
 pub type TableOid = u32;
 pub type ColumnOid = u32;
@@ -38,7 +38,6 @@ pub struct IndexInfo {
     /// The size of the index key, in bytes
     key_size: usize,
 }
-
 
 /// The Catalog is a non-persistent catalog that is designed for use by executors within the DBMS
 /// execution engine. It handles table creation, table lookup, index creation and index lookup

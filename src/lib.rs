@@ -1,12 +1,12 @@
-mod types;
 mod catalog;
-mod storage;
+mod common;
 mod concurrency;
 mod execution;
 mod recovery;
-mod common;
+mod storage;
 #[cfg(test)]
 mod tests;
+mod types;
 
 use common::error::*;
 
@@ -15,7 +15,6 @@ extern crate log;
 extern crate flexi_logger;
 #[macro_use]
 extern crate lazy_static;
-
 
 #[cfg(test)]
 mod tests_me {

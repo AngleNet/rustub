@@ -1,10 +1,10 @@
-use std::fs;
-use std::sync::Mutex;
-use crate::common::config::{PAGE_SIZE, PageId};
+use crate::common::config::{PageId, PAGE_SIZE};
 use crate::common::error::Result;
+use crate::RustubError;
+use std::fs;
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::sync::atomic::AtomicBool;
-use crate::RustubError;
+use std::sync::Mutex;
 
 pub type FlushLogFuture = fn();
 
@@ -55,23 +55,43 @@ impl FileBasedDiskManager {
         // todo: refactor this.
         // todo: How to initialize a database file safely?
         // Try to open the log file and truncate it if it already exists.
-        let mut file = fs::File::options().create(true).append(true).read(true).open(&log_file);
+        let mut file = fs::File::options()
+            .create(true)
+            .append(true)
+            .read(true)
+            .open(&log_file);
         if file.is_err() {
             // the just opened file will be dropped right here
-            file = fs::File::options().truncate(true).write(true).open(&log_file);
+            file = fs::File::options()
+                .truncate(true)
+                .write(true)
+                .open(&log_file);
             // reopen it with the original options
             file = fs::File::options().append(true).read(true).open(&log_file);
             if file.is_err() {
-                return Err(RustubError::IOError(file.err().unwrap(), "can't open log file"));
+                return Err(RustubError::IOError(
+                    file.err().unwrap(),
+                    "can't open log file",
+                ));
             }
         }
         let log_io = file.unwrap();
-        file = fs::File::options().create(true).write(true).read(true).open(&db_file);
+        file = fs::File::options()
+            .create(true)
+            .write(true)
+            .read(true)
+            .open(&db_file);
         if file.is_err() {
-            file = fs::File::options().truncate(true).write(true).open(&db_file);
+            file = fs::File::options()
+                .truncate(true)
+                .write(true)
+                .open(&db_file);
             file = fs::File::options().write(true).read(true).open(&db_file);
             if file.is_err() {
-                return Err(RustubError::IOError(file.err().unwrap(), "can't open database file"));
+                return Err(RustubError::IOError(
+                    file.err().unwrap(),
+                    "can't open database file",
+                ));
             }
         }
         return Ok(FileBasedDiskManager {
@@ -93,10 +113,7 @@ impl FileBasedDiskManager {
     }
 }
 
-
 impl DiskManager for FileBasedDiskManager {
-
-
     // 1. What does the APPEND flag do when open a file? For a write, we need to ensure the data is
     // passed to write once and the offset will be set to the end of file.
     // 2. How does the seek affect read and write?
@@ -236,17 +253,17 @@ impl DiskManager for FileBasedDiskManager {
 
 pub struct InMemDiskManager {}
 
-
 #[cfg(test)]
 mod test {
-    use std::sync::Once;
     use flexi_logger::{colored_default_format, colored_opt_format};
+    use std::sync::Once;
 
     static TEST_LOGGER_INIT: Once = Once::new();
 
     fn test_setup_logger() {
         TEST_LOGGER_INIT.call_once(|| {
-            flexi_logger::Logger::try_with_env_or_str("debug").unwrap()
+            flexi_logger::Logger::try_with_env_or_str("debug")
+                .unwrap()
                 .log_to_stdout()
                 .format_for_stdout(colored_opt_format)
                 .use_utc()
@@ -255,13 +272,13 @@ mod test {
         });
     }
 
+    use crate::common::config::PAGE_SIZE;
+    use crate::common::memcpy;
+    use crate::storage::disk::{DiskManager, FileBasedDiskManager};
     use std::fs;
     use std::fs::File;
     use std::io::{Read, Seek, SeekFrom, Write};
     use std::panic;
-    use crate::common::config::PAGE_SIZE;
-    use crate::common::memcpy;
-    use crate::storage::disk::{DiskManager, FileBasedDiskManager};
 
     fn set_up() {
         fs::remove_file("test.db");
@@ -276,13 +293,12 @@ mod test {
 
     // todo: how to setup and teardown tests in rust?
     fn run_test<T>(test: T) -> ()
-        where T: FnOnce() -> () + panic::UnwindSafe
+    where
+        T: FnOnce() -> () + panic::UnwindSafe,
     {
         set_up();
 
-        let result = panic::catch_unwind(|| {
-            test()
-        });
+        let result = panic::catch_unwind(|| test());
 
         tear_down();
         assert!(result.is_ok())
@@ -339,8 +355,12 @@ mod test {
 
     #[test]
     fn append_read_write() {
-        let mut log = File::options().append(true).create(true).read(true)
-            .open("test.log").unwrap();
+        let mut log = File::options()
+            .append(true)
+            .create(true)
+            .read(true)
+            .open("test.log")
+            .unwrap();
 
         log.write(&b"12345"[..]).unwrap();
         log.flush();
