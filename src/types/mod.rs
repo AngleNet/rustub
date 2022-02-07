@@ -5,6 +5,7 @@ mod integer;
 /// casted to.
 mod value;
 mod varchar;
+mod timestamp;
 
 pub use crate::types::boolean::BooleanType;
 use crate::types::value::Value;
