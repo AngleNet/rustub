@@ -20,6 +20,22 @@ pub enum TypeId {
     Timestamp,
 }
 
+impl ToString for TypeId {
+    fn to_string(&self) -> String {
+        match self {
+            TypeId::Invalid => { "INVALID".to_string() }
+            TypeId::Boolean => { "BOOLEAN".to_string() }
+            TypeId::TinyInt => { "TINYINT".to_string() }
+            TypeId::SmallInt => { "SMALLINT".to_string() }
+            TypeId::Integer => { "INTEGER".to_string() }
+            TypeId::BigInt => { "BIGINT".to_string() }
+            TypeId::Decimal => { "DECIMAL".to_string() }
+            TypeId::VarChar => { "VARCHAR".to_string() }
+            TypeId::Timestamp => { "TIMESTAMP".to_string() }
+        }
+    }
+}
+
 impl From<u8> for TypeId {
     #[inline]
     fn from(v: u8) -> Self {

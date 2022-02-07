@@ -37,10 +37,34 @@ impl Value {
     }
 
     #[inline]
+    pub fn with_null(typ: TypeId) -> Self {
+        Value {
+            value: Val::Null,
+            type_id: typ,
+        }
+    }
+
+    #[inline]
+    pub fn with_varchar(var: &[u8]) -> Self {
+        Value {
+            value: Val::Varlen(Vec::from(var)),
+            type_id: TypeId::VarChar,
+        }
+    }
+
+    #[inline]
     pub fn as_boolean(&self) -> i8 {
         match &self.value {
             Val::Boolean(v) => *v,
             _ => panic!(""),
+        }
+    }
+
+    #[inline]
+    pub fn as_varchar(&self) -> &[u8] {
+        match &self.value {
+            Val::Varlen(ref v) => &v[..],
+            _ => panic!("")
         }
     }
 
@@ -195,9 +219,5 @@ mod test {
     use super::*;
 
     #[test]
-    fn test() {
-        let v = Value::with_boolean(1);
-        let x: i8 = v.try_into().unwrap();
-        println!("{:?}", x);
-    }
+    fn test() {}
 }
