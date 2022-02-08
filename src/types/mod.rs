@@ -1,11 +1,11 @@
 mod boolean;
 mod integer;
+mod timestamp;
 /// Rustub supports ordinary types, such as boolean, tiny int, small int, int, big int, varchar,
 /// timestamp, decimal. Every value has a specific type and a bunch of compatible types which can be
 /// casted to.
 mod value;
 mod varchar;
-mod timestamp;
 
 pub use crate::types::boolean::BooleanType;
 use crate::types::value::Value;
