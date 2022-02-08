@@ -27,6 +27,11 @@ impl CheckExprNode {
     pub fn enter_count(&self) -> i32 {
         self.enter_count
     }
+
+    pub fn reset(&mut self) {
+        self.enter_count = 0;
+        self.leave_count = 0;
+    }
 }
 
 impl<V: Visitor> Node<V> for CheckExprNode {

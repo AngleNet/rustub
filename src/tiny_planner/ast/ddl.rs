@@ -161,12 +161,13 @@ mod test {
 
     #[test]
     fn ddl_visitor_cover() {
-        let ce = CheckExprNode::default();
+        let mut ce = CheckExprNode::default();
         let cases = vec![
             TestCase::new(AstNode::CreateDatabaseStmt(CreateDatabaseStmtNode::default()), 0, 0)
         ];
         let mut v = CheckVisitor {};
         for case in cases {
+            ce.reset();
             case.node.accept(&mut v);
             assert_eq!(case.expected_enter_count, ce.enter_count());
             assert_eq!(case.expected_leave_count, ce.leave_count());
