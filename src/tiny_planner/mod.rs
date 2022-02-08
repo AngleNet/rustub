@@ -8,6 +8,7 @@ mod property;
 mod statistics;
 mod physical;
 mod logical;
+mod ast;
 
 
 /// Plan is the description of an execution flow. It is created from Ast Node first, then optimized
@@ -27,7 +28,7 @@ pub trait Plan {
 
     fn output_names(&self) -> &[&str];
 
-    fn set_output_names(&self, &[&str]);
+    fn set_output_names(&self, names: &[&str]);
 }
 
 /// LogicalPlan is a tree of logical operators.

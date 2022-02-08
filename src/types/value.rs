@@ -25,7 +25,6 @@ use std::env::var;
 ///
 
 // todo: what if a value is null?
-
 #[derive(Debug)]
 enum Val {
     Boolean(i8),
@@ -92,6 +91,13 @@ impl Value {
         }
     }
 
+    pub fn as_smallint(&self) -> i16 {
+        match &self.value {
+            Val::SmallInt(v) => *v,
+            _ => panic!(""),
+        }
+    }
+
     pub fn as_integer(&self) -> i32 {
         match &self.value {
             Val::Int(v) => *v,
@@ -102,6 +108,13 @@ impl Value {
     pub fn as_bigint(&self) -> i64 {
         match &self.value {
             Val::BigInt(v) => *v,
+            _ => panic!(""),
+        }
+    }
+
+    pub fn as_decimal(&self) -> f64{
+        match &self.value {
+            Val::Decimal(v) => *v,
             _ => panic!(""),
         }
     }
