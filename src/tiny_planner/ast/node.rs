@@ -4,7 +4,7 @@ pub trait Node<V: Visitor> {
     /// Accepts a visitor to visit itself.
     /// The returned node should replace the original node. It also returns whether to stop visiting
     /// or not. It's actually modifying the node(actually a tree) according to the visitor.
-    fn accept(self, visitor: V) -> (AstNode, bool);
+    fn accept(self, visitor: &mut V) -> (AstNode, bool);
 }
 
 pub enum AstNode {
@@ -26,7 +26,10 @@ pub enum AstNode {
 }
 
 impl<V> Node<V> for AstNode where V: Visitor {
-    fn accept(self, visitor: V) -> (AstNode, bool) {
-        todo!()
+    fn accept(self, visitor: &mut V) -> (AstNode, bool) {
+        match self {
+            AstNode::CreateDatabaseStmt(s) => s.accept(visitor),
+            _ => { panic!("") }
+        }
     }
 }

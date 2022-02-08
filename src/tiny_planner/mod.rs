@@ -9,6 +9,7 @@ mod statistics;
 mod physical;
 mod logical;
 mod ast;
+mod test;
 
 
 /// Plan is the description of an execution flow. It is created from Ast Node first, then optimized

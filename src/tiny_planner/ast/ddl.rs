@@ -6,6 +6,7 @@ pub struct DatabaseOption {
 }
 
 /// Statement which creates a database
+#[derive(Default)]
 pub struct CreateDatabaseStmtNode {
     if_not_exists: bool,
     name: String,
@@ -13,7 +14,7 @@ pub struct CreateDatabaseStmtNode {
 }
 
 impl<V: Visitor> Node<V> for CreateDatabaseStmtNode {
-    fn accept(self, visitor: V) -> (AstNode, bool) {
+    fn accept(self, visitor: &mut V) -> (AstNode, bool) {
         let (node, _) = visitor.enter(AstNode::CreateDatabaseStmt(self));
         visitor.leave(node)
     }
@@ -26,7 +27,7 @@ pub struct DropDatabaseStmtNode {
 }
 
 impl<V: Visitor> Node<V> for DropDatabaseStmtNode {
-    fn accept(self, visitor: V) -> (AstNode, bool) {
+    fn accept(self, visitor: &mut V) -> (AstNode, bool) {
         let (node, _) = visitor.enter(AstNode::DropDatabaseStmt(self));
         visitor.leave(node)
     }
@@ -92,7 +93,7 @@ pub struct IndexOptionNode {
 }
 
 impl<V: Visitor> Node<V> for IndexOptionNode {
-    fn accept(self, visitor: V) -> (AstNode, bool) {
+    fn accept(self, visitor: &mut V) -> (AstNode, bool) {
         let (node, _) = visitor.enter(AstNode::IndexOption(self));
         visitor.leave(node)
     }
@@ -127,12 +128,48 @@ pub struct ColumnOptionNode {
     enforced: bool,
 }
 
-impl <V> Node<V> for ColumnOptionNode where V: Visitor {
-    fn accept(self, visitor: V) -> (AstNode, bool) {
+impl<V> Node<V> for ColumnOptionNode where V: Visitor {
+    fn accept(self, visitor: &mut V) -> (AstNode, bool) {
         let (node, skip) = visitor.enter(AstNode::ColumnOption(self));
         if skip {
             return visitor.leave(node);
         }
         todo!()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::tiny_planner::ast::{AstNode, CheckExprNode, CreateDatabaseStmtNode, Node};
+    use crate::tiny_planner::test::CheckVisitor;
+
+    struct TestCase {
+        node: AstNode,
+        expected_enter_count: i32,
+        expected_leave_count: i32,
+    }
+
+    impl TestCase {
+        fn new(node: AstNode, enter: i32, leave: i32) -> Self {
+            TestCase {
+                node,
+                expected_enter_count: enter,
+                expected_leave_count: leave,
+            }
+        }
+    }
+
+    #[test]
+    fn ddl_visitor_cover() {
+        let ce = CheckExprNode::default();
+        let cases = vec![
+            TestCase::new(AstNode::CreateDatabaseStmt(CreateDatabaseStmtNode::default()), 0, 0)
+        ];
+        let mut v = CheckVisitor {};
+        for case in cases {
+            case.node.accept(&mut v);
+            assert_eq!(case.expected_enter_count, ce.enter_count());
+            assert_eq!(case.expected_leave_count, ce.leave_count());
+        }
     }
 }
