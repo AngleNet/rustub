@@ -9,5 +9,5 @@ pub struct StatsInfo {
     /// Indicates the statistics version of a table. If the StatsInfo is calculated using the pseudo
     /// statistics on a table, stats_version will be PseudoVersion
     /// todo: what is PseudoVersion?
-    stats_version: u64
+    stats_version: u64,
 }

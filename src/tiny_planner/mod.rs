@@ -1,16 +1,15 @@
-use std::collections::HashMap;
 use crate::tiny_planner::expression::{Column, Schema};
 use crate::tiny_planner::property::StatsInfo;
+use std::collections::HashMap;
 
-mod plan;
+mod ast;
 mod expression;
+mod logical;
+mod physical;
+mod plan;
 mod property;
 mod statistics;
-mod physical;
-mod logical;
-mod ast;
 mod test;
-
 
 /// Plan is the description of an execution flow. It is created from Ast Node first, then optimized
 /// by the optimizer, finally used by the executor to create a Cursor which executes the statement.

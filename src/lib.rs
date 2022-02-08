@@ -6,8 +6,8 @@ mod recovery;
 mod storage;
 #[cfg(test)]
 mod tests;
-mod types;
 mod tiny_planner;
+mod types;
 
 use common::error::*;
 

@@ -11,7 +11,7 @@ impl Visitor for CheckVisitor {
                 (node, true)
             }
             // keep searching
-            _ => { (node, false) }
+            _ => (node, false),
         }
     }
 

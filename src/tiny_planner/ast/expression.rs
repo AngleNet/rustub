@@ -2,7 +2,7 @@ use super::*;
 
 pub enum ExpressionNode {
     /// Test only stuff
-    Check(CheckExprNode)
+    Check(CheckExprNode),
 }
 
 #[derive(Default)]
@@ -35,8 +35,8 @@ impl CheckExprNode {
 }
 
 impl<V: Visitor> Node<V> for CheckExprNode {
-    fn accept(self, visitor: &mut V) -> (AstNode, bool) {
-        let (node, _) = visitor.enter(AstNode::Expression(ExpressionNode::Check(self)));
-        visitor.leave(node)
+    fn accept(self, v: &mut V) -> (AstNode, bool) {
+        let (node, _) = v.enter(AstNode::Expression(ExpressionNode::Check(self)));
+        v.leave(node)
     }
 }

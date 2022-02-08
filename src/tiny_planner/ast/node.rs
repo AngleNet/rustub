@@ -1,10 +1,11 @@
+use std::ops::{Deref, DerefMut};
 use super::*;
 
 pub trait Node<V: Visitor> {
     /// Accepts a visitor to visit itself.
     /// The returned node should replace the original node. It also returns whether to stop visiting
     /// or not. It's actually modifying the node(actually a tree) according to the visitor.
-    fn accept(self, visitor: &mut V) -> (AstNode, bool);
+    fn accept(self, v: &mut V) -> (AstNode, bool);
 }
 
 pub enum AstNode {
@@ -18,18 +19,25 @@ pub enum AstNode {
     AlterIndexStmt(AlterTableStmtNode),
     DropIndexStmt(DropIndexStmtNode),
 
-    /// DDL options
-    IndexOption(IndexOptionNode),
-    ColumnOption(ColumnOptionNode),
+    /// DDL misc
+    Option(OptionNode),
+    Def(DefNode),
 
     Expression(ExpressionNode),
 }
 
-impl<V> Node<V> for AstNode where V: Visitor {
-    fn accept(self, visitor: &mut V) -> (AstNode, bool) {
+
+impl<V> Node<V> for AstNode
+    where
+        V: Visitor,
+{
+    fn accept(self, v: &mut V) -> (AstNode, bool) {
         match self {
-            AstNode::CreateDatabaseStmt(s) => s.accept(visitor),
-            _ => { panic!("") }
+            AstNode::CreateDatabaseStmt(s) => s.accept(v),
+            AstNode::DropDatabaseStmt(s) => s.accept(v),
+            _ => {
+                panic!("")
+            }
         }
     }
 }

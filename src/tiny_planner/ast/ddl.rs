@@ -1,5 +1,7 @@
+use std::ops::Deref;
 use super::*;
 
+#[derive(Default)]
 pub struct DatabaseOption {
     option_type: i32,
     value: String,
@@ -14,28 +16,31 @@ pub struct CreateDatabaseStmtNode {
 }
 
 impl<V: Visitor> Node<V> for CreateDatabaseStmtNode {
-    fn accept(self, visitor: &mut V) -> (AstNode, bool) {
-        let (node, _) = visitor.enter(AstNode::CreateDatabaseStmt(self));
-        visitor.leave(node)
+    fn accept(self, v: &mut V) -> (AstNode, bool) {
+        let (node, _) = v.enter(AstNode::CreateDatabaseStmt(self));
+        v.leave(node)
     }
 }
 
 /// Statement which drops a database and all tables in the database
+#[derive(Default)]
 pub struct DropDatabaseStmtNode {
     if_exists: bool,
     name: String,
 }
 
 impl<V: Visitor> Node<V> for DropDatabaseStmtNode {
-    fn accept(self, visitor: &mut V) -> (AstNode, bool) {
-        let (node, _) = visitor.enter(AstNode::DropDatabaseStmt(self));
-        visitor.leave(node)
+    fn accept(self, v: &mut V) -> (AstNode, bool) {
+        let (node, _) = v.enter(AstNode::DropDatabaseStmt(self));
+        v.leave(node)
     }
 }
 
 pub struct CreateTableStmtNode {
     if_not_exists: bool,
     is_temporary: bool,
+    table: TableName,
+    refer_table: TableName,
 }
 
 pub struct AlterTableStmtNode {}
@@ -48,10 +53,69 @@ pub struct AlterIndexStmtNode {}
 
 pub struct DropIndexStmtNode {}
 
+pub enum OptionNode {
+    Index(IndexOption),
+    Column(ColumnOption),
+}
+
+
+impl<V: Visitor> Node<V> for OptionNode {
+    fn accept(self, v: &mut V) -> (AstNode, bool) {
+        match self {
+            OptionNode::Index(o) => o.accept(v),
+            OptionNode::Column(o) => o.accept(v),
+        }
+    }
+}
+
+pub enum DefNode {
+    Column(ColumnDef),
+}
 
 ///////////////////////// misc
 
-pub struct TableName {}
+pub struct FieldType {}
+
+pub struct TableName {
+    schema: String,
+    name: String,
+    partitions: Vec<String>,
+}
+
+pub struct ColumnName {
+    schema: String,
+    table: String,
+    name: String,
+}
+
+pub struct ColumnDef {
+    name: TableName,
+    field_type: FieldType,
+    options: Vec<ColumnOption>,
+}
+
+impl<V> Node<V> for ColumnDef where V: Visitor {
+    fn accept(self, v: &mut V) -> (AstNode, bool) {
+        let (node, skip) = v.enter(AstNode::Def(DefNode::Column(self)));
+        if skip {
+            return v.leave(node);
+        }
+
+        match &node {
+            AstNode::Def(DefNode::Column(ref mut c)) => {
+                for i in 0..c.options.len() {
+                    let (n, ok) = c.options[i].accept(v);
+                    if !ok {
+                        return (node, false);
+                    }
+                    c.options[i] = n;
+                }
+            }
+            _ => { panic!() }
+        }
+        v.leave(node)
+    }
+}
 
 #[derive(Clone, Copy, Debug)]
 pub enum IndexType {
@@ -64,10 +128,10 @@ pub enum IndexType {
 impl Into<String> for IndexType {
     fn into(self) -> String {
         match self {
-            IndexType::Invalid => { "".to_string() }
-            IndexType::BTree => { "BTREE".to_string() }
-            IndexType::Hash => { "HASH".to_string() }
-            IndexType::RTree => { "RTREE".to_string() }
+            IndexType::Invalid => "".to_string(),
+            IndexType::BTree => "BTREE".to_string(),
+            IndexType::Hash => "HASH".to_string(),
+            IndexType::RTree => "RTREE".to_string(),
         }
     }
 }
@@ -84,7 +148,7 @@ pub enum IndexVisibility {
 /// |   index_type
 /// |   WITH PARSER parser_name
 /// |   COMMENT 'string'
-pub struct IndexOptionNode {
+pub struct IndexOption {
     key_block_size: u64,
     index_type: IndexType,
     comment: String,
@@ -92,10 +156,10 @@ pub struct IndexOptionNode {
     visibility: IndexVisibility,
 }
 
-impl<V: Visitor> Node<V> for IndexOptionNode {
-    fn accept(self, visitor: &mut V) -> (AstNode, bool) {
-        let (node, _) = visitor.enter(AstNode::IndexOption(self));
-        visitor.leave(node)
+impl<V: Visitor> Node<V> for IndexOption {
+    fn accept(self, v: &mut V) -> (AstNode, bool) {
+        let (node, _) = v.enter(AstNode::Option(OptionNode::Index(self)));
+        v.leave(node)
     }
 }
 
@@ -119,7 +183,7 @@ pub enum ColumnOptionType {
     AutoRandom,
 }
 
-pub struct ColumnOptionNode {
+pub struct ColumnOption {
     option_type: ColumnOptionType,
     expression: ExpressionNode,
     stored: bool,
@@ -128,11 +192,14 @@ pub struct ColumnOptionNode {
     enforced: bool,
 }
 
-impl<V> Node<V> for ColumnOptionNode where V: Visitor {
-    fn accept(self, visitor: &mut V) -> (AstNode, bool) {
-        let (node, skip) = visitor.enter(AstNode::ColumnOption(self));
+impl<V> Node<V> for ColumnOption
+    where
+        V: Visitor,
+{
+    fn accept(self, v: &mut V) -> (AstNode, bool) {
+        let (node, skip) = v.enter(AstNode::Option(OptionNode::Column(self)));
         if skip {
-            return visitor.leave(node);
+            return v.leave(node);
         }
         todo!()
     }
@@ -140,7 +207,9 @@ impl<V> Node<V> for ColumnOptionNode where V: Visitor {
 
 #[cfg(test)]
 mod test {
-    use crate::tiny_planner::ast::{AstNode, CheckExprNode, CreateDatabaseStmtNode, Node};
+    use crate::tiny_planner::ast::{
+        AstNode, CheckExprNode, CreateDatabaseStmtNode, DropDatabaseStmtNode, Node,
+    };
     use crate::tiny_planner::test::CheckVisitor;
 
     struct TestCase {
@@ -163,7 +232,16 @@ mod test {
     fn ddl_visitor_cover() {
         let mut ce = CheckExprNode::default();
         let cases = vec![
-            TestCase::new(AstNode::CreateDatabaseStmt(CreateDatabaseStmtNode::default()), 0, 0)
+            TestCase::new(
+                AstNode::CreateDatabaseStmt(CreateDatabaseStmtNode::default()),
+                0,
+                0,
+            ),
+            TestCase::new(
+                AstNode::DropDatabaseStmt(DropDatabaseStmtNode::default()),
+                0,
+                0,
+            ),
         ];
         let mut v = CheckVisitor {};
         for case in cases {

@@ -112,7 +112,7 @@ impl Value {
         }
     }
 
-    pub fn as_decimal(&self) -> f64{
+    pub fn as_decimal(&self) -> f64 {
         match &self.value {
             Val::Decimal(v) => *v,
             _ => panic!(""),

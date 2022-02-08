@@ -1,11 +1,11 @@
-mod node;
-mod expression;
 mod ddl;
 mod dml;
+mod expression;
+mod node;
 mod visitor;
 
-pub use node::*;
-pub use expression::*;
 pub use ddl::*;
 pub use dml::*;
+pub use expression::*;
+pub use node::*;
 pub use visitor::*;
