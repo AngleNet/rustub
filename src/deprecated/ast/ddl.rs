@@ -96,19 +96,16 @@ pub struct ColumnDef {
 
 impl<V> Node<V> for ColumnDef where V: Visitor {
     fn accept(self, v: &mut V) -> (AstNode, bool) {
-        let (node, skip) = v.enter(AstNode::Def(DefNode::Column(self)));
+        let (mut node, skip) = v.enter(AstNode::Def(DefNode::Column(self)));
         if skip {
             return v.leave(node);
         }
 
-        match &node {
+        match &mut node {
             AstNode::Def(DefNode::Column(ref mut c)) => {
                 for i in 0..c.options.len() {
-                    let (n, ok) = c.options[i].accept(v);
-                    if !ok {
-                        return (node, false);
-                    }
-                    c.options[i] = n;
+                    // todo: we can not do this.
+                    // let (n, ok) = c.options[i].accept(v);
                 }
             }
             _ => { panic!() }
@@ -207,7 +204,7 @@ impl<V> Node<V> for ColumnOption
 
 #[cfg(test)]
 mod test {
-    use crate::tiny_planner::ast::{
+    use crate::deprecated::ast::{
         AstNode, CheckExprNode, CreateDatabaseStmtNode, DropDatabaseStmtNode, Node,
     };
     use crate::tiny_planner::test::CheckVisitor;

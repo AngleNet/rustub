@@ -2,7 +2,6 @@ use crate::tiny_planner::expression::{Column, Schema};
 use crate::tiny_planner::property::StatsInfo;
 use std::collections::HashMap;
 
-mod ast;
 mod expression;
 mod logical;
 mod physical;

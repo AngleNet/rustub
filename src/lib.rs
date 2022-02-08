@@ -8,6 +8,7 @@ mod storage;
 mod tests;
 mod tiny_planner;
 mod types;
+mod deprecated;
 
 use common::error::*;
 
