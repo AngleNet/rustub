@@ -1,5 +1,12 @@
 use super::*;
 
+pub trait Node<V: Visitor> {
+    /// Accepts a visitor to visit itself.
+    /// The returned node should replace the original node. It also returns whether to stop visiting
+    /// or not. It's actually modifying the node(actually a tree) according to the visitor.
+    fn accept(self, visitor: V) -> (AstNode, bool);
+}
+
 pub enum AstNode {
     /// DDL
     CreateDatabaseStmt(CreateDatabaseStmtNode),
@@ -10,6 +17,16 @@ pub enum AstNode {
     CreateIndexStmt(CreateIndexStmtNode),
     AlterIndexStmt(AlterTableStmtNode),
     DropIndexStmt(DropIndexStmtNode),
-    /// DML
-    /// Expressions
+
+    /// DDL options
+    IndexOption(IndexOptionNode),
+    ColumnOption(ColumnOptionNode),
+
+    Expression(ExpressionNode),
+}
+
+impl<V> Node<V> for AstNode where V: Visitor {
+    fn accept(self, visitor: V) -> (AstNode, bool) {
+        todo!()
+    }
 }
