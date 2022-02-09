@@ -1,4 +1,4 @@
-use std::fmt::{Display, Formatter, write};
+use std::fmt::{write, Display, Formatter};
 use std::io::Error;
 
 pub type Result<T> = std::result::Result<T, RustubError>;

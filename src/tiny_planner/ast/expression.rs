@@ -1,4 +1,3 @@
-
 pub enum ExpressionNode {}
 
 impl Clone for ExpressionNode {

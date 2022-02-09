@@ -150,9 +150,9 @@ impl Clone for DropTableStmtNode {
 pub struct AlterTableStmtNode {}
 
 /// Truncate table statement
-pub struct TruncateTableStmtNode{}
+pub struct TruncateTableStmtNode {}
 
 /// Create index statement
-pub struct CreateIndexStmtNode{}
+pub struct CreateIndexStmtNode {}
 /// Drop index statement
-pub struct DropIndexStmtNode{}
+pub struct DropIndexStmtNode {}

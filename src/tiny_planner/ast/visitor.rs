@@ -4,30 +4,14 @@ use crate::common::error::Result;
 pub trait AstVisitor {
     fn visit(&mut self, mut node: &mut AstNode) -> Result<()> {
         match node {
-            AstNode::CreateDatabaseStmt(s) => {
-                self.visit_create_database_stmt(s)
-            }
-            AstNode::DropDatabaseStmt(s) => {
-                self.visit_drop_database_stmt(s)
-            }
-            AstNode::CreateTableStmt(s) => {
-                self.visit_create_table_stmt(s)
-            }
-            AstNode::DropTableStmt(s) => {
-                self.visit_drop_table_stmt(s)
-            }
-            AstNode::AlterTableStmt(s) => {
-                self.visit_alter_table_stmt(s)
-            }
-            AstNode::TruncateTableStmt(s) => {
-                self.visit_truncate_table_stmt(s)
-            }
-            AstNode::CreateIndexStmt(s) => {
-                self.visit_create_index_stmt(s)
-            }
-            AstNode::DropIndexStmt(s) => {
-                self.visit_drop_index_stmt(s)
-            }
+            AstNode::CreateDatabaseStmt(s) => self.visit_create_database_stmt(s),
+            AstNode::DropDatabaseStmt(s) => self.visit_drop_database_stmt(s),
+            AstNode::CreateTableStmt(s) => self.visit_create_table_stmt(s),
+            AstNode::DropTableStmt(s) => self.visit_drop_table_stmt(s),
+            AstNode::AlterTableStmt(s) => self.visit_alter_table_stmt(s),
+            AstNode::TruncateTableStmt(s) => self.visit_truncate_table_stmt(s),
+            AstNode::CreateIndexStmt(s) => self.visit_create_index_stmt(s),
+            AstNode::DropIndexStmt(s) => self.visit_drop_index_stmt(s),
         }
     }
 
@@ -75,40 +59,38 @@ pub trait AstVisitor {
             ColumnOption::DefaultValue(e) => {
                 ColumnOption::DefaultValue(self.visit_expression(e).unwrap())
             }
-            ColumnOption::OnUpdate(e) => {
-                ColumnOption::OnUpdate(self.visit_expression(e).unwrap())
-            }
+            ColumnOption::OnUpdate(e) => ColumnOption::OnUpdate(self.visit_expression(e).unwrap()),
             ColumnOption::Generated(e) => {
                 ColumnOption::Generated(self.visit_expression(e).unwrap())
             }
-            ColumnOption::PrimaryKey => { ColumnOption::PrimaryKey }
-            ColumnOption::NotNull => { ColumnOption::NotNull }
-            ColumnOption::AutoIncrement => { ColumnOption::AutoIncrement }
-            ColumnOption::UniqKey => { ColumnOption::UniqKey }
-            ColumnOption::Null => { ColumnOption::Null }
-            ColumnOption::Fulltext => { ColumnOption::Fulltext }
-            ColumnOption::Comment => { ColumnOption::Comment }
-            ColumnOption::Reference => { ColumnOption::Reference }
-            ColumnOption::Check(b) => { ColumnOption::Check(*b) }
-            ColumnOption::ColumnFormat => { ColumnOption::ColumnFormat }
-            ColumnOption::Storage => { ColumnOption::Storage }
-            ColumnOption::AutoRandom => { ColumnOption::AutoRandom }
+            ColumnOption::PrimaryKey => ColumnOption::PrimaryKey,
+            ColumnOption::NotNull => ColumnOption::NotNull,
+            ColumnOption::AutoIncrement => ColumnOption::AutoIncrement,
+            ColumnOption::UniqKey => ColumnOption::UniqKey,
+            ColumnOption::Null => ColumnOption::Null,
+            ColumnOption::Fulltext => ColumnOption::Fulltext,
+            ColumnOption::Comment => ColumnOption::Comment,
+            ColumnOption::Reference => ColumnOption::Reference,
+            ColumnOption::Check(b) => ColumnOption::Check(*b),
+            ColumnOption::ColumnFormat => ColumnOption::ColumnFormat,
+            ColumnOption::Storage => ColumnOption::Storage,
+            ColumnOption::AutoRandom => ColumnOption::AutoRandom,
         };
         Ok(new)
     }
 
     fn visit_table_constraint(&mut self, constraint: &TableConstraint) -> Result<TableConstraint> {
         let new = match constraint {
-            TableConstraint::NoConstraint => { TableConstraint::NoConstraint }
-            TableConstraint::PrimaryKey => { TableConstraint::PrimaryKey }
-            TableConstraint::Key => { TableConstraint::Key }
-            TableConstraint::Index => { TableConstraint::Index }
-            TableConstraint::Uniq => { TableConstraint::Uniq }
-            TableConstraint::UniqKey => { TableConstraint::UniqKey }
-            TableConstraint::UniqIndex => { TableConstraint::UniqIndex }
-            TableConstraint::ForeignKey => { TableConstraint::ForeignKey }
-            TableConstraint::Fulltext => { TableConstraint::Fulltext }
-            TableConstraint::Check => { TableConstraint::Check }
+            TableConstraint::NoConstraint => TableConstraint::NoConstraint,
+            TableConstraint::PrimaryKey => TableConstraint::PrimaryKey,
+            TableConstraint::Key => TableConstraint::Key,
+            TableConstraint::Index => TableConstraint::Index,
+            TableConstraint::Uniq => TableConstraint::Uniq,
+            TableConstraint::UniqKey => TableConstraint::UniqKey,
+            TableConstraint::UniqIndex => TableConstraint::UniqIndex,
+            TableConstraint::ForeignKey => TableConstraint::ForeignKey,
+            TableConstraint::Fulltext => TableConstraint::Fulltext,
+            TableConstraint::Check => TableConstraint::Check,
         };
         Ok(new)
     }

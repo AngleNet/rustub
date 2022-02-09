@@ -2,8 +2,8 @@ mod ddl;
 mod dml;
 mod expression;
 mod node;
-mod visitor;
 mod test;
+mod visitor;
 
 pub use ddl::*;
 pub use dml::*;

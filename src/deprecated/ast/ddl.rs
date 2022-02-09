@@ -1,5 +1,5 @@
-use std::ops::Deref;
 use super::*;
+use std::ops::Deref;
 
 #[derive(Default)]
 pub struct DatabaseOption {
@@ -58,7 +58,6 @@ pub enum OptionNode {
     Column(ColumnOption),
 }
 
-
 impl<V: Visitor> Node<V> for OptionNode {
     fn accept(self, v: &mut V) -> (AstNode, bool) {
         match self {
@@ -94,7 +93,10 @@ pub struct ColumnDef {
     options: Vec<ColumnOption>,
 }
 
-impl<V> Node<V> for ColumnDef where V: Visitor {
+impl<V> Node<V> for ColumnDef
+where
+    V: Visitor,
+{
     fn accept(self, v: &mut V) -> (AstNode, bool) {
         let (mut node, skip) = v.enter(AstNode::Def(DefNode::Column(self)));
         if skip {
@@ -108,7 +110,9 @@ impl<V> Node<V> for ColumnDef where V: Visitor {
                     // let (n, ok) = c.options[i].accept(v);
                 }
             }
-            _ => { panic!() }
+            _ => {
+                panic!()
+            }
         }
         v.leave(node)
     }
@@ -190,8 +194,8 @@ pub struct ColumnOption {
 }
 
 impl<V> Node<V> for ColumnOption
-    where
-        V: Visitor,
+where
+    V: Visitor,
 {
     fn accept(self, v: &mut V) -> (AstNode, bool) {
         let (node, skip) = v.enter(AstNode::Option(OptionNode::Column(self)));

@@ -1,5 +1,5 @@
-use std::ops::{Deref, DerefMut};
 use super::*;
+use std::ops::{Deref, DerefMut};
 
 pub trait Node<V: Visitor> {
     /// Accepts a visitor to visit itself.
@@ -26,10 +26,9 @@ pub enum AstNode {
     Expression(ExpressionNode),
 }
 
-
 impl<V> Node<V> for AstNode
-    where
-        V: Visitor,
+where
+    V: Visitor,
 {
     fn accept(self, v: &mut V) -> (AstNode, bool) {
         match self {

@@ -1,6 +1,7 @@
 mod catalog;
 mod common;
 mod concurrency;
+mod deprecated;
 mod execution;
 mod recovery;
 mod storage;
@@ -8,7 +9,6 @@ mod storage;
 mod tests;
 mod tiny_planner;
 mod types;
-mod deprecated;
 
 use common::error::*;
 
