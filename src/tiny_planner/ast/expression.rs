@@ -1,7 +1,13 @@
-pub enum ExpressionNode {}
+use super::*;
 
-impl Clone for ExpressionNode {
-    fn clone(&self) -> Self {
-        todo!()
-    }
+pub enum ExpressionNode {
+    Between,
+    BinaryOperation,
+    Parentheses,
+    PatternIn,
+    Row,
+    UnaryExpression,
+    Values,
+    Variable,
+    ColumnName,
 }

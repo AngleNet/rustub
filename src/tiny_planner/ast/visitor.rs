@@ -24,84 +24,59 @@ pub trait AstVisitor {
     }
 
     fn visit_create_table_stmt(&mut self, node: &mut CreateTableStmtNode) -> Result<()> {
-        node.table = self.visit_table_name(&node.table).unwrap();
-        if let Some(ref n) = node.refer_table {
-            node.refer_table = Some(self.visit_table_name(n).unwrap());
+        self.visit_table_name(&mut node.table)?;
+        if let Some(ref mut n) = node.refer_table {
+            self.visit_table_name(n)?;
         }
         for idx in 0..node.columns.len() {
-            node.columns[idx] = self.visit_table_column(&mut node.columns[idx]).unwrap();
+            self.visit_table_column(&mut node.columns[idx])?;
         }
         for idx in 0..node.constraints.len() {
-            node.constraints[idx] = self.visit_table_constraint(&node.constraints[idx]).unwrap();
+            self.visit_table_constraint(&mut node.constraints[idx])?;
         }
         Ok(())
     }
 
-    fn visit_table_name(&mut self, name: &TableName) -> Result<TableName> {
-        Ok(name.clone())
+    fn visit_table_name(&mut self, name: &mut TableName) -> Result<()> {
+        Ok(())
     }
 
-    fn visit_table_column(&mut self, col: &mut ColumnDef) -> Result<ColumnDef> {
-        let mut new = col.clone();
-        new.name = self.visit_column_name(&new.name).unwrap();
-        for idx in 0..new.options.len() {
-            new.options[idx] = self.visit_column_option(&new.options[idx]).unwrap();
+    fn visit_table_column(&mut self, col: &mut ColumnDef) -> Result<()> {
+        self.visit_column_name(&mut col.name)?;
+        for idx in 0..col.options.len() {
+            self.visit_column_option(&mut col.options[idx])?;
         }
-        Ok(new)
+        Ok(())
     }
 
-    fn visit_column_name(&mut self, col: &ColumnName) -> Result<ColumnName> {
-        Ok(col.clone())
+    fn visit_column_name(&mut self, col: &ColumnName) -> Result<()> {
+        Ok(())
     }
 
-    fn visit_column_option(&mut self, opt: &ColumnOption) -> Result<ColumnOption> {
-        let new = match opt {
-            ColumnOption::DefaultValue(e) => {
-                ColumnOption::DefaultValue(self.visit_expression(e).unwrap())
+    fn visit_column_option(&mut self, mut opt: &mut ColumnOption) -> Result<()> {
+        match opt {
+            ColumnOption::DefaultValue(e)
+            | ColumnOption::OnUpdate(e)
+            | ColumnOption::Generated(e) => {
+                self.visit_expression(e)?;
             }
-            ColumnOption::OnUpdate(e) => ColumnOption::OnUpdate(self.visit_expression(e).unwrap()),
-            ColumnOption::Generated(e) => {
-                ColumnOption::Generated(self.visit_expression(e).unwrap())
-            }
-            ColumnOption::PrimaryKey => ColumnOption::PrimaryKey,
-            ColumnOption::NotNull => ColumnOption::NotNull,
-            ColumnOption::AutoIncrement => ColumnOption::AutoIncrement,
-            ColumnOption::UniqKey => ColumnOption::UniqKey,
-            ColumnOption::Null => ColumnOption::Null,
-            ColumnOption::Fulltext => ColumnOption::Fulltext,
-            ColumnOption::Comment => ColumnOption::Comment,
-            ColumnOption::Reference => ColumnOption::Reference,
-            ColumnOption::Check(b) => ColumnOption::Check(*b),
-            ColumnOption::ColumnFormat => ColumnOption::ColumnFormat,
-            ColumnOption::Storage => ColumnOption::Storage,
-            ColumnOption::AutoRandom => ColumnOption::AutoRandom,
-        };
-        Ok(new)
+            _ => {}
+        }
+        Ok(())
     }
 
-    fn visit_table_constraint(&mut self, constraint: &TableConstraint) -> Result<TableConstraint> {
-        let new = match constraint {
-            TableConstraint::NoConstraint => TableConstraint::NoConstraint,
-            TableConstraint::PrimaryKey => TableConstraint::PrimaryKey,
-            TableConstraint::Key => TableConstraint::Key,
-            TableConstraint::Index => TableConstraint::Index,
-            TableConstraint::Uniq => TableConstraint::Uniq,
-            TableConstraint::UniqKey => TableConstraint::UniqKey,
-            TableConstraint::UniqIndex => TableConstraint::UniqIndex,
-            TableConstraint::ForeignKey => TableConstraint::ForeignKey,
-            TableConstraint::Fulltext => TableConstraint::Fulltext,
-            TableConstraint::Check => TableConstraint::Check,
-        };
-        Ok(new)
+    fn visit_table_constraint(&mut self, constraint: &mut TableConstraint) -> Result<()> {
+        Ok(())
     }
 
-    fn visit_expression(&mut self, exp: &ExpressionNode) -> Result<ExpressionNode> {
+    fn visit_expression(&mut self, exp: &mut ExpressionNode) -> Result<()> {
+        // what if we want to rewrite the expression?
         todo!()
     }
 
     fn visit_drop_table_stmt(&mut self, stmt: &mut DropTableStmtNode) -> Result<()> {
         for idx in 0..stmt.tables.len() {
-            stmt.tables[idx] = self.visit_table_name(&stmt.tables[idx]).unwrap();
+            self.visit_table_name(&mut stmt.tables[idx])?;
         }
         Ok(())
     }
