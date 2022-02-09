@@ -11,4 +11,5 @@ pub enum AstNode {
     DropIndexStmt(DropIndexStmtNode),
     Expression(ExpressionNode),
     SelectStmt(SelectStmtNode),
+    ExplainStmt(ExplainStmtNode),
 }

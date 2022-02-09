@@ -15,6 +15,7 @@ pub trait AstVisitor {
             AstNode::DropIndexStmt(s) => self.visit_drop_index_stmt(s),
             AstNode::Expression(s) => self.visit_expression(s),
             AstNode::SelectStmt(s) => self.visit_select_stmt(s),
+            AstNode::ExplainStmt(s) => self.visit_explain_stmt(s),
         }
     }
 
@@ -93,6 +94,10 @@ pub trait AstVisitor {
 
     fn visit_drop_index_stmt(&mut self, stmt: &mut DropIndexStmtNode) -> Result<()> {
         todo!()
+    }
+
+    fn visit_explain_stmt(&mut self, stmt: &mut ExplainStmtNode) -> Result<()> {
+        self.visit(&mut stmt.stmt)
     }
 
     /// Expressions
