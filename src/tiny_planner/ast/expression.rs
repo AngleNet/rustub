@@ -1,7 +1,7 @@
+use super::*;
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::Arc;
-use super::*;
 
 pub enum ExpressionNode {
     Between(BetweenExpr),
@@ -116,7 +116,7 @@ impl CheckExpr {
 impl Clone for CheckExpr {
     fn clone(&self) -> Self {
         CheckExpr {
-            count: self.count.clone()
+            count: self.count.clone(),
         }
     }
 }
@@ -151,55 +151,46 @@ mod test {
     #[test]
     pub fn expression_visitor_cover() {
         let mut check = CheckExpr {
-            count: Rc::new(RefCell::new(0))
+            count: Rc::new(RefCell::new(0)),
         };
         let mut cases = vec![
             TestCase {
-                node: ExpressionNode::Between(
-                    BetweenExpr {
-                        expr: wrap_check(&check),
-                        left: wrap_check(&check),
-                        right: wrap_check(&check),
-                        not: false,
-                    }),
+                node: ExpressionNode::Between(BetweenExpr {
+                    expr: wrap_check(&check),
+                    left: wrap_check(&check),
+                    right: wrap_check(&check),
+                    not: false,
+                }),
                 expected_count: 3,
             },
             TestCase {
-                node: ExpressionNode::BinaryOperation(
-                    BinaryOperationExpr {
-                        op: Op::And,
-                        left: wrap_check(&check),
-                        right: wrap_check(&check),
-                    }
-                ),
+                node: ExpressionNode::BinaryOperation(BinaryOperationExpr {
+                    op: Op::And,
+                    left: wrap_check(&check),
+                    right: wrap_check(&check),
+                }),
                 expected_count: 2,
             },
             TestCase {
-                node: ExpressionNode::Parentheses(
-                    ParenthesesExpr {
-                        expr: wrap_check(&check)
-                    }
-                ),
+                node: ExpressionNode::Parentheses(ParenthesesExpr {
+                    expr: wrap_check(&check),
+                }),
                 expected_count: 1,
             },
             TestCase {
-                node: ExpressionNode::UnaryOperation(
-                    UnaryOperationExpr {
-                        op: Op::LogicAnd,
-                        expr: wrap_check(&check),
-                    }
-                ),
+                node: ExpressionNode::UnaryOperation(UnaryOperationExpr {
+                    op: Op::LogicAnd,
+                    expr: wrap_check(&check),
+                }),
                 expected_count: 1,
             },
             TestCase {
-                node: ExpressionNode::Variable(
-                    VariableExpr {
-                        name: "".to_string(),
-                        is_global: false,
-                        is_system: false,
-                        value: wrap_check(&check),
-                    }
-                ),
+                node: ExpressionNode::Variable(VariableExpr {
+                    name: "".to_string(),
+                    is_global: false,
+                    is_system: false,
+                    value: wrap_check(&check),
+                }),
                 expected_count: 1,
             },
         ];
