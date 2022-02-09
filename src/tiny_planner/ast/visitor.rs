@@ -169,7 +169,7 @@ pub trait AstVisitor {
     }
 
     fn visit_check_expr(&mut self, check: &mut CheckExpr) -> Result<()> {
-        check.count += 1;
+        check.increment();
         Ok(())
     }
     /// Select statement

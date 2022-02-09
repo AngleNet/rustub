@@ -1,3 +1,6 @@
+use std::cell::RefCell;
+use std::rc::Rc;
+use std::sync::Arc;
 use super::*;
 
 pub enum ExpressionNode {
@@ -16,6 +19,7 @@ pub enum ExpressionNode {
 /// "between and" or "not between and"
 pub struct BetweenExpr {
     /// The expression to be checked
+    /// todo: why need this?
     pub expr: Box<ExpressionNode>,
     /// The minimal value in the range
     pub left: Box<ExpressionNode>,
@@ -94,5 +98,116 @@ pub struct AggregateFuncExpr {
 }
 
 pub struct CheckExpr {
-    pub count: u32,
+    pub count: Rc<RefCell<u32>>,
+}
+
+impl CheckExpr {
+    pub fn reset(&mut self) {
+        let mut v = self.count.borrow_mut();
+        *v = 0;
+    }
+
+    pub fn increment(&mut self) {
+        let mut v = self.count.borrow_mut();
+        *v += 1;
+    }
+}
+
+impl Clone for CheckExpr {
+    fn clone(&self) -> Self {
+        CheckExpr {
+            count: self.count.clone()
+        }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    struct CheckVisitor {}
+
+    impl AstVisitor for CheckVisitor {}
+
+    struct TestCase {
+        node: ExpressionNode,
+        expected_count: u32,
+    }
+
+    impl TestCase {
+        fn new(node: ExpressionNode, expected_count: u32) -> Self {
+            TestCase {
+                node,
+                expected_count,
+            }
+        }
+    }
+
+    #[inline]
+    fn wrap_check(check: &CheckExpr) -> Box<ExpressionNode> {
+        Box::new(ExpressionNode::Check(check.clone()))
+    }
+
+    #[test]
+    pub fn expression_visitor_cover() {
+        let mut check = CheckExpr {
+            count: Rc::new(RefCell::new(0))
+        };
+        let mut cases = vec![
+            TestCase {
+                node: ExpressionNode::Between(
+                    BetweenExpr {
+                        expr: wrap_check(&check),
+                        left: wrap_check(&check),
+                        right: wrap_check(&check),
+                        not: false,
+                    }),
+                expected_count: 3,
+            },
+            TestCase {
+                node: ExpressionNode::BinaryOperation(
+                    BinaryOperationExpr {
+                        op: Op::And,
+                        left: wrap_check(&check),
+                        right: wrap_check(&check),
+                    }
+                ),
+                expected_count: 2,
+            },
+            TestCase {
+                node: ExpressionNode::Parentheses(
+                    ParenthesesExpr {
+                        expr: wrap_check(&check)
+                    }
+                ),
+                expected_count: 1,
+            },
+            TestCase {
+                node: ExpressionNode::UnaryOperation(
+                    UnaryOperationExpr {
+                        op: Op::LogicAnd,
+                        expr: wrap_check(&check),
+                    }
+                ),
+                expected_count: 1,
+            },
+            TestCase {
+                node: ExpressionNode::Variable(
+                    VariableExpr {
+                        name: "".to_string(),
+                        is_global: false,
+                        is_system: false,
+                        value: wrap_check(&check),
+                    }
+                ),
+                expected_count: 1,
+            },
+        ];
+        let mut visitor = CheckVisitor {};
+        for case in &mut cases {
+            check.reset();
+            assert!(visitor.visit_expression(&mut case.node).is_ok());
+            assert_eq!(case.expected_count, *check.count.borrow());
+        }
+    }
 }
