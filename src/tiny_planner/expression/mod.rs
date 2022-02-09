@@ -1,11 +1,5 @@
-pub struct Column {}
+mod schema;
 
-/// KeyInfo stores the columns of one unique key or primary key.
-pub type KeyInfo = Vec<Column>;
+pub use schema::*;
 
-/// Schema stands for the row schema and unique key information get from input.
-pub struct Schema {
-    columns: Vec<Column>,
-    // Including unique keys and primary keys
-    keys: Vec<KeyInfo>,
-}
+pub enum Expression {}

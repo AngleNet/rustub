@@ -1,8 +1,8 @@
 use super::*;
 use crate::common::error::Result;
 
+/// 1. the node could be visited, changed and replaced
 pub trait AstVisitor {
-    /// todo: how to do pre/in/post order traversing?
     fn visit(&mut self, mut node: &mut AstNode) -> Result<()> {
         match node {
             AstNode::CreateDatabaseStmt(s) => self.visit_create_database_stmt(s),

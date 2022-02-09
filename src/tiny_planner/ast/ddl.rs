@@ -1,5 +1,4 @@
 use crate::tiny_planner::ast::ExpressionNode;
-use crate::tiny_planner::expression::Column;
 
 /// Create database statement
 #[derive(Default)]

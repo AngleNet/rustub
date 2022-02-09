@@ -17,6 +17,8 @@ extern crate log;
 extern crate flexi_logger;
 #[macro_use]
 extern crate lazy_static;
+#[macro_use]
+extern crate scopeguard;
 
 #[cfg(test)]
 mod tests_me {
