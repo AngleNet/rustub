@@ -1,7 +1,12 @@
+use super::*;
+
 pub enum AstNode {
-    CreateDatabaseStmt,
-    DropDatabaseStmt,
-    CreateTableStmt,
-    DropTableStmt,
-    AlterTableStmt,
+    CreateDatabaseStmt(CreateDatabaseStmtNode),
+    DropDatabaseStmt(DropDatabaseStmtNode),
+    CreateTableStmt(CreateTableStmtNode),
+    DropTableStmt(DropTableStmtNode),
+    AlterTableStmt(AlterTableStmtNode),
+    TruncateTableStmt(TruncateTableStmtNode),
+    CreateIndexStmt(CreateIndexStmtNode),
+    DropIndexStmt(DropIndexStmtNode),
 }

@@ -1,4 +1,4 @@
-use std::fmt::{Display, Formatter};
+use std::fmt::{Display, Formatter, write};
 use std::io::Error;
 
 pub type Result<T> = std::result::Result<T, RustubError>;
@@ -7,6 +7,7 @@ pub type Result<T> = std::result::Result<T, RustubError>;
 pub enum RustubError {
     UntypedError(&'static str),
     IOError(Error, &'static str),
+    AstNodeVisitError(&'static str),
     UnimplementedError(&'static str),
 }
 
@@ -21,6 +22,9 @@ impl Display for RustubError {
             }
             RustubError::UnimplementedError(m) => {
                 write!(f, "Not Implemented :: {}", m)
+            }
+            RustubError::AstNodeVisitError(m) => {
+                write!(f, "AST Visit Error :: {}", m)
             }
         }
     }
