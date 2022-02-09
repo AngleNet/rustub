@@ -13,8 +13,8 @@ pub trait AstVisitor {
             AstNode::TruncateTableStmt(s) => self.visit_truncate_table_stmt(s),
             AstNode::CreateIndexStmt(s) => self.visit_create_index_stmt(s),
             AstNode::DropIndexStmt(s) => self.visit_drop_index_stmt(s),
-            AstNode::Expression(s) => { self.visit_expression(s) }
-            AstNode::SelectStmt(s) => { self.visit_select_stmt(s) }
+            AstNode::Expression(s) => self.visit_expression(s),
+            AstNode::SelectStmt(s) => self.visit_select_stmt(s),
         }
     }
 
@@ -99,32 +99,20 @@ pub trait AstVisitor {
     fn visit_expression(&mut self, exp: &mut ExpressionNode) -> Result<()> {
         // what if we want to rewrite the expression?
         match exp {
-            ExpressionNode::Between(e) => {
-                self.visit_between_and_expr(e)
+            ExpressionNode::Between(e) => self.visit_between_and_expr(e),
+            ExpressionNode::BinaryOperation(e) => self.visit_binary_operation_expr(e),
+            ExpressionNode::Parentheses(e) => self.visit_parentheses_expr(e),
+            ExpressionNode::PatternIn(e) => self.visit_pattern_in_expr(e),
+            ExpressionNode::UnaryOperation(e) => self.visit_unary_operation_expr(e),
+            ExpressionNode::Values => {
+                unimplemented!()
             }
-            ExpressionNode::BinaryOperation(e) => {
-                self.visit_binary_operation_expr(e)
+            ExpressionNode::Variable(e) => self.visit_variable_expr(e),
+            ExpressionNode::ColumnName => {
+                unimplemented!()
             }
-            ExpressionNode::Parentheses(e) => {
-                self.visit_parentheses_expr(e)
-            }
-            ExpressionNode::PatternIn(e) => {
-                self.visit_pattern_in_expr(e)
-            }
-            ExpressionNode::UnaryOperation(e) => {
-                self.visit_unary_operation_expr(e)
-            }
-            ExpressionNode::Values => { unimplemented!() }
-            ExpressionNode::Variable(e) => {
-                self.visit_variable_expr(e)
-            }
-            ExpressionNode::ColumnName => { unimplemented!() }
-            ExpressionNode::Func(f) => {
-                self.visit_func_expr(f)
-            }
-            ExpressionNode::Check(c) => {
-                self.visit_check_expr(c)
-            }
+            ExpressionNode::Func(f) => self.visit_func_expr(f),
+            ExpressionNode::Check(c) => self.visit_check_expr(c),
         }
     }
 
@@ -161,12 +149,8 @@ pub trait AstVisitor {
 
     fn visit_func_expr(&mut self, func: &mut FuncExpr) -> Result<()> {
         match func {
-            FuncExpr::FuncCall(f) => {
-                self.visit_func_call_expr(f)
-            }
-            FuncExpr::AggregateFunc(f) => {
-                self.visit_agg_func_call_expr(f)
-            }
+            FuncExpr::FuncCall(f) => self.visit_func_call_expr(f),
+            FuncExpr::AggregateFunc(f) => self.visit_agg_func_call_expr(f),
         }
     }
 
@@ -222,12 +206,8 @@ pub trait AstVisitor {
 
     fn visit_select_field(&mut self, field: &mut SelectField) -> Result<()> {
         match field {
-            SelectField::WildCard(w) => {
-                self.visit_select_wildcard_field(w)
-            }
-            SelectField::AliasExpr(e) => {
-                self.visit_select_alias_expr_field(e)
-            }
+            SelectField::WildCard(w) => self.visit_select_wildcard_field(w),
+            SelectField::AliasExpr(e) => self.visit_select_alias_expr_field(e),
         }
     }
 
@@ -241,18 +221,10 @@ pub trait AstVisitor {
 
     fn visit_table_ref(&mut self, table: &mut TableRef) -> Result<()> {
         match table {
-            TableRef::SelectStmt(s) => {
-                self.visit_select_stmt(s)
-            }
-            TableRef::TableSource(s) => {
-                self.visit_table_source(s)
-            }
-            TableRef::TableName(n) => {
-                self.visit_table_name(n)
-            }
-            TableRef::Join(j) => {
-                self.visit_table_join(j)
-            }
+            TableRef::SelectStmt(s) => self.visit_select_stmt(s),
+            TableRef::TableSource(s) => self.visit_table_source(s),
+            TableRef::TableName(n) => self.visit_table_name(n),
+            TableRef::Join(j) => self.visit_table_join(j),
         }
     }
 

@@ -208,10 +208,10 @@ where
 
 #[cfg(test)]
 mod test {
+    use crate::deprecated::ast::test::CheckVisitor;
     use crate::deprecated::ast::{
         AstNode, CheckExprNode, CreateDatabaseStmtNode, DropDatabaseStmtNode, Node,
     };
-    use crate::deprecated::ast::test::CheckVisitor;
 
     struct TestCase {
         node: AstNode,

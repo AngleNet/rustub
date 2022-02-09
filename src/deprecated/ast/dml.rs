@@ -1,6 +1,3 @@
-
 use super::*;
 
-pub struct SelectStmtNode {
-
-}
+pub struct SelectStmtNode {}
