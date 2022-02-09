@@ -211,7 +211,7 @@ mod test {
     use crate::deprecated::ast::{
         AstNode, CheckExprNode, CreateDatabaseStmtNode, DropDatabaseStmtNode, Node,
     };
-    use crate::tiny_planner::test::CheckVisitor;
+    use crate::deprecated::ast::test::CheckVisitor;
 
     struct TestCase {
         node: AstNode,

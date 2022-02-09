@@ -9,4 +9,6 @@ pub enum AstNode {
     TruncateTableStmt(TruncateTableStmtNode),
     CreateIndexStmt(CreateIndexStmtNode),
     DropIndexStmt(DropIndexStmtNode),
+    Expression(ExpressionNode),
+    SelectStmt(SelectStmtNode),
 }
