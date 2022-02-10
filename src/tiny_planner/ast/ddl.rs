@@ -1,7 +1,7 @@
-use crate::tiny_planner::ast::ExpressionNode;
+use super::*;
+use crate::tiny_planner::types::FieldType;
 
 /// Create database statement
-#[derive(Default)]
 pub struct CreateDatabaseStmtNode {
     pub if_not_exists: bool,
     pub name: String,
@@ -15,14 +15,12 @@ pub enum DatabaseOption {
 }
 
 /// Drop database statement
-#[derive(Default)]
 pub struct DropDatabaseStmtNode {
     pub if_exists: bool,
     pub name: String,
 }
 
 /// Create table statement
-#[derive(Default)]
 pub struct CreateTableStmtNode {
     pub if_not_exists: bool,
     pub is_temporary: bool,
@@ -32,14 +30,12 @@ pub struct CreateTableStmtNode {
     pub constraints: Vec<TableConstraint>,
 }
 
-#[derive(Default)]
 pub struct TableName {
     pub schema: String,
     pub name: String,
     pub partition_names: Vec<String>,
 }
 
-#[derive(Default)]
 pub struct ColumnDef {
     pub name: ColumnName,
     pub field_type: FieldType,
@@ -47,7 +43,6 @@ pub struct ColumnDef {
     pub options: Vec<ColumnOption>,
 }
 
-#[derive(Default)]
 pub struct ColumnName {
     pub schema: String,
     pub table: String,
@@ -71,9 +66,6 @@ pub enum ColumnOption {
     Storage,
     AutoRandom,
 }
-
-#[derive(Default, Clone, Copy)]
-pub struct FieldType {}
 
 /// fixme: missing index options and specifications
 pub enum TableConstraint {
@@ -105,5 +97,6 @@ pub struct TruncateTableStmtNode {}
 
 /// Create index statement
 pub struct CreateIndexStmtNode {}
+
 /// Drop index statement
 pub struct DropIndexStmtNode {}

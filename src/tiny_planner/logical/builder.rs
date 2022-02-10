@@ -6,7 +6,7 @@ use super::*;
 pub struct PlanBuilder {}
 
 impl PlanBuilder {
-    pub fn build(&mut self, node: &AstNode) -> Result<Plan> {
+    pub fn build(&mut self, node: &AstNode) -> Result<LogicalPlan> {
         match node {
             AstNode::SelectStmt(s) => self.build_select(s),
             _ => {
@@ -15,7 +15,7 @@ impl PlanBuilder {
         }
     }
 
-    pub fn build_select(&mut self, stmt: &SelectStmtNode) -> Result<Plan> {
+    pub fn build_select(&mut self, stmt: &SelectStmtNode) -> Result<LogicalPlan> {
         todo!()
     }
 }

@@ -1,17 +1,21 @@
 mod builder;
-mod node;
+mod plan;
 
 pub use builder::*;
-pub use node::*;
+pub use plan::*;
 
-pub enum Plan {
+pub trait Plan {
+    fn schema(&mut self) -> &mut PlanSchema;
+}
+
+pub enum LogicalPlan {
     DataSource(DataSource),
 }
 
-impl Plan {
-    pub fn schema(&mut self) -> &mut PlanSchema {
+impl Plan for LogicalPlan {
+    fn schema(&mut self) -> &mut PlanSchema {
         match self {
-            Plan::DataSource(s) => s.schema(),
+            LogicalPlan::DataSource(s) => s.schema(),
         }
     }
 }
